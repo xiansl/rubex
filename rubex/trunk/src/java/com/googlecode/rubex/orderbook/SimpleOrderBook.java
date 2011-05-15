@@ -101,13 +101,20 @@ public class SimpleOrderBook extends AbstractOrderBook
                 long tradeQuantity = 
                     Math.min (
                         newEntry.unfilledQuantity, entry.unfilledQuantity);
+
+                switch (side)
+                {
+                case BID:
+                    fill (timestamp, newEntry, entry, tradeQuantity, entryLimitPrice);
+                    break;
+                case ASK:
+                    fill (timestamp, entry, newEntry, tradeQuantity, entryLimitPrice);
+                    break;
+                default:
+                    throw new Error (
+                        "Unknown order book entry side: " + side);
+                }
                 
-                fillEntry (
-                    timestamp, newEntry, tradeQuantity, entryLimitPrice);
-                fillEntry (
-                    timestamp, entry, tradeQuantity, entryLimitPrice);
-                
-                fireOnTrade (timestamp, tradeQuantity, entryLimitPrice);
                 fireOnQuote (timestamp, entry.side, entryLimitPrice, -tradeQuantity);
             }
             else break;
@@ -150,11 +157,59 @@ public class SimpleOrderBook extends AbstractOrderBook
         return newEntry;
     }
     
+    private void fill (long timestamp, OrderBookEntry bidEntry, OrderBookEntry askEntry, long quantity, long price)
+    {
+        if (bidEntry == null)
+            throw new IllegalArgumentException ("Bid entry is null");
+        
+        if (askEntry == null)
+            throw new IllegalArgumentException ("Ask entry is null");
+
+        if (!OrderBookEntrySide.BID.equals (bidEntry.getEntrySide ()))
+            throw new IllegalArgumentException ("Bid entry is not bid");
+
+        if (!OrderBookEntrySide.ASK.equals (askEntry.getEntrySide ()))
+            throw new IllegalArgumentException ("Ask entry is not ask");
+        
+        if (quantity <= 0)
+            throw new IllegalArgumentException ("Quantity <= 0");
+        
+        if (price <= 0)
+            throw new IllegalArgumentException ("Price <= 0");
+            
+        if (bidEntry.getOrderBook () != this)
+            throw new IllegalArgumentException (
+                "This order book entry is not mine");
+        
+        if (askEntry.getOrderBook () != this)
+            throw new IllegalArgumentException (
+                "This order book entry is not mine");
+
+        if (!bidEntry.active)
+            throw new IllegalStateException ("Bid entry is not active");
+
+        if (!askEntry.active)
+            throw new IllegalStateException ("Ask entry is not active");
+
+        if (quantity > bidEntry.unfilledQuantity)
+            throw new IllegalStateException ("Not enough unfilled quantity in bid entry");
+
+        if (quantity > askEntry.unfilledQuantity)
+            throw new IllegalStateException ("Not enough unfilled quantity in ask entry");
+        
+        fillEntry (
+            timestamp, bidEntry, quantity, price);
+        fillEntry (
+            timestamp, askEntry, quantity, price);
+        
+        fireOnTrade (timestamp, bidEntry, askEntry, quantity, price);
+    }
+    
     private void fillEntry (
         long timestamp, OrderBookEntry entry, long quantity, long price)
     {
         if (entry == null)
-            throw new IllegalArgumentException ("Entry is null");
+            throw new IllegalArgumentException ("Bid entry is null");
         
         if (quantity <= 0)
             throw new IllegalArgumentException ("Quantity <= 0");
