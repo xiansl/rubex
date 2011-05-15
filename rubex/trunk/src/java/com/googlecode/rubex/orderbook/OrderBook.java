@@ -24,15 +24,19 @@ public interface OrderBook
     public void removeOrderBookListener (OrderBookListener listener);
     
     /**
-     * Place an order book entry with given timestamp, entry side, quantity, limit price, callback and closure.
+     * Place an order book entry with given timestamp, entry side, quantity, 
+     * limit price, callback and closure.
      * 
-     * @param timestamp time of the bid
+     * @param timestamp time of the bid in milliseconds since epoch
      * @param side side of the order book entry
      * @param quantity bid quantity in quantity units
      * @param limitPrice limit price in price units or zero for market order
      * @param callback callback to be notified about entry events
      * @param closure closure to be passed to the callback
      * @return order book entry handler
+     * @throws OrderBookException if entry could not be placed
+     * 
+     * @see System#currentTimeMillis()
      */
     public OrderBookEntryHandler placeEntry (
         long timestamp, OrderBookEntrySide side,

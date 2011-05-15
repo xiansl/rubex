@@ -1,7 +1,7 @@
 package com.googlecode.rubex.orderbook;
 
 /**
- * Signals an error in order book, i.e. invalid order.
+ * Signals an error in order book, i.e. invalid entry.
  * 
  * @author Mikhail Vladimirov
  */
