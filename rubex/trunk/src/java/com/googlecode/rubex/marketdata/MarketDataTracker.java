@@ -8,6 +8,10 @@ public interface MarketDataTracker
     
     public long getLastTradeQuantity ();
     
+    public long getTotalVolume ();
+    
+    public long getTotalValue ();
+    
     public long getBestBidPrice ();
     
     public long getBestBidQuantity ();
