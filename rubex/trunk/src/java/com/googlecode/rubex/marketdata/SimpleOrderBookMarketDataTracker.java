@@ -15,6 +15,8 @@ public class SimpleOrderBookMarketDataTracker implements MarketDataTracker, Orde
     private long lastTradePrice = 0;
     private long lastTradeQuantity = 0;
     private long lastTradeTimestamp = 0;
+    private long totalVolume = 0;
+    private long totalValue = 0;
     
     private NavigableMap<Long, Long> bids = new TreeMap<Long, Long> ();
     private NavigableMap<Long, Long> asks = new TreeMap<Long, Long> ();
@@ -25,6 +27,9 @@ public class SimpleOrderBookMarketDataTracker implements MarketDataTracker, Orde
         lastTradePrice = event.getPrice ();
         lastTradeQuantity = event.getQuantity ();
         lastTradeTimestamp = event.getTimestamp ();
+        
+        totalVolume = safeAdd (totalVolume, event.getQuantity ());
+        totalValue = safeAdd (totalValue, safeMultiply (event.getQuantity (), event.getPrice ()));
     }
 
     @Override
@@ -71,6 +76,18 @@ public class SimpleOrderBookMarketDataTracker implements MarketDataTracker, Orde
     public long getLastTradeQuantity ()
     {
         return lastTradeQuantity;
+    }
+
+    @Override
+    public long getTotalVolume ()
+    {
+        return totalVolume;
+    }
+
+    @Override
+    public long getTotalValue ()
+    {
+        return totalValue;
     }
 
     @Override
@@ -172,6 +189,23 @@ public class SimpleOrderBookMarketDataTracker implements MarketDataTracker, Orde
             throw new RuntimeException ("Long number overflow");
         
         return x + y;
+    }
+    
+    private static long safeMultiply (long x, long y)
+    {
+        if (x > 0 && y > 0 && (x > Long.MAX_VALUE / y))
+            throw new RuntimeException ("Long number overflow");
+        
+        if (x < 0 && y < 0 && (x < Long.MAX_VALUE / y))
+            throw new RuntimeException ("Long number overflow");
+        
+        if (x < 0 && y > 0 && (x < Long.MIN_VALUE / y))
+            throw new RuntimeException ("Long number overflow");
+        
+        if (x > 0 && y < 0 && (x > Long.MIN_VALUE / y))
+            throw new RuntimeException ("Long number overflow");
+        
+        return x * y;
     }
     
     private static class MyQuote implements Quote
