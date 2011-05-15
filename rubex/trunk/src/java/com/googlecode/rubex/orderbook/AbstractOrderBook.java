@@ -14,7 +14,8 @@ import com.googlecode.rubex.orderbook.event.OrderBookTradeEvent;
  */
 public abstract class AbstractOrderBook implements OrderBook
 {
-    private final List <OrderBookListener> listeners = new ArrayList<OrderBookListener> ();
+    private final List <OrderBookListener> listeners = 
+        new ArrayList<OrderBookListener> ();
 
     /**
      * Create new abstract order book.
@@ -62,9 +63,12 @@ public abstract class AbstractOrderBook implements OrderBook
     /**
      * Notify all order book listeners about trade.
      * 
-     * @param timestamp time when event occurred
+     * @param timestamp time when event occurred in milliseconds since epoch.
      * @param quantity trade quantity in quantity units
      * @param price trade price in price units
+     * 
+     * @see System#currentTimeMillis()
+     * @see OrderBookTradeEvent
      */
     protected void fireOnTrade (long timestamp, long quantity, long price)
     {
@@ -79,7 +83,8 @@ public abstract class AbstractOrderBook implements OrderBook
         for (OrderBookListener listener: listeners)
         {
             if (event == null)
-                event = new OrderBookTradeEvent (this, timestamp, quantity, price);
+                event = new OrderBookTradeEvent (
+                    this, timestamp, quantity, price);
             
             listener.onTrade (event);
         }
@@ -88,12 +93,16 @@ public abstract class AbstractOrderBook implements OrderBook
     /**
      * Notify all order book listeners about quote event.
      * 
-     * @param timestamp time when event occurred
+     * @param timestamp time when event occurred in milliseconds since epoch.
      * @param side quote side
      * @param price quote price in price units
      * @param quantityDelta delta of the quantity in quantity units
+     * 
+     * @see System#currentTimeMillis()
+     * @see OrderBookQuoteEvent
      */
-    protected void fireOnQuote (long timestamp, OrderBookEntrySide side, long price, long quantityDelta)
+    protected void fireOnQuote (
+        long timestamp, OrderBookEntrySide side, long price, long quantityDelta)
     {
         if (side == null)
             throw new IllegalArgumentException ("Side is null");
@@ -106,7 +115,8 @@ public abstract class AbstractOrderBook implements OrderBook
         for (OrderBookListener listener: listeners)
         {
             if (event == null)
-                event = new OrderBookQuoteEvent (this, timestamp, side, price, quantityDelta);
+                event = new OrderBookQuoteEvent (
+                    this, timestamp, side, price, quantityDelta);
             
             listener.onQuote (event);
         }
