@@ -64,14 +64,32 @@ public abstract class AbstractOrderBook implements OrderBook
      * Notify all order book listeners about trade.
      * 
      * @param timestamp time when event occurred in milliseconds since epoch.
+     * @param bidEntryHandler handler of bid entry participated in trade
+     * @param askEntryHandler handler of ask entry participated in trade
      * @param quantity trade quantity in quantity units
      * @param price trade price in price units
      * 
      * @see System#currentTimeMillis()
      * @see OrderBookTradeEvent
      */
-    protected void fireOnTrade (long timestamp, long quantity, long price)
+    protected void fireOnTrade (
+        long timestamp, 
+        OrderBookEntryHandler bidEntryHandler, 
+        OrderBookEntryHandler askEntryHandler, 
+        long quantity, long price)
     {
+        if (bidEntryHandler == null)
+            throw new IllegalArgumentException ("Bid entry handler is null");
+        
+        if (askEntryHandler == null)
+            throw new IllegalArgumentException ("Ask entry handler is null");
+        
+        if (!OrderBookEntrySide.BID.equals (bidEntryHandler.getEntrySide ()))
+            throw new IllegalArgumentException ("Bid entry handler is not bid");
+        
+        if (!OrderBookEntrySide.ASK.equals (askEntryHandler.getEntrySide ()))
+            throw new IllegalArgumentException ("Ask entry handler is not ask");
+        
         if (quantity <= 0)
             throw new IllegalArgumentException ("Quantity <= 0");
         
@@ -84,7 +102,9 @@ public abstract class AbstractOrderBook implements OrderBook
         {
             if (event == null)
                 event = new OrderBookTradeEvent (
-                    this, timestamp, quantity, price);
+                    this, timestamp, 
+                    bidEntryHandler, askEntryHandler, 
+                    quantity, price);
             
             listener.onTrade (event);
         }
