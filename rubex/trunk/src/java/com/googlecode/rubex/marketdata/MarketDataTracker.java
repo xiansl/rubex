@@ -58,18 +58,53 @@ public interface MarketDataTracker
      */
     public long getBestAskQuantity ();
     
+    /**
+     * Get best bid quotes.
+     * 
+     * @param maximumCount maximum number of quotes to return
+     * @return an array of {@link Quote} objects
+     */
     public Quote [] getBidQuotes (int maximumCount);
     
+    /**
+     * Get best ask quotes.
+     * 
+     * @param maximumCount maximum number of quotes to return
+     * @return an array of {@link Quote} objects
+     */
     public Quote [] getAskQuotes (int maximumCount);
     
+    /**
+     * Get total bid quantity in quantity units with price >= given threshold 
+     * price.
+     * 
+     * @param price threshold price
+     * @return total bid quantity above given threshold price
+     */
     public long getBidQuantityAbove (int price);
     
+    /**
+     * Get total ask quantity in quantity units with price <= given threshold 
+     * price.
+     * 
+     * @param price threshold price
+     * @return total ask quantity below given threshold price
+     */
     public long getAskQuantityBelow (int price);
     
+    /**
+     * Represents single quote.
+     */
     public static interface Quote
     {
+        /**
+         * Return quote quantity in quantity units.
+         */
         public long getQuantity ();
         
+        /**
+         * Return quote price in price units.
+         */
         public long getPrice ();
     }
 }
