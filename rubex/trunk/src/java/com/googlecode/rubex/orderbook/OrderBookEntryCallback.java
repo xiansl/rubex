@@ -1,4 +1,4 @@
-package com.googlecode.rubex;
+package com.googlecode.rubex.orderbook;
 
 public interface OrderBookEntryCallback
 {
