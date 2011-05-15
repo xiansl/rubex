@@ -1,8 +1,8 @@
-package com.googlecode.rubex;
+package com.googlecode.rubex.orderbook;
 
 public interface OrderBookEntryHandler
 {
-    public OrderBookEntryType getEntryType (); 
+    public OrderBookEntrySide getEntrySide (); 
     
     public long getUnfilledQuantity ();
     
@@ -10,5 +10,5 @@ public interface OrderBookEntryHandler
     
     public Object getClosure ();
     
-    public void cancel (long timestamp);
+    public void cancel (long timestamp) throws OrderBookException;
 }

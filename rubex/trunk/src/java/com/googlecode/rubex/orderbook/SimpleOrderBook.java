@@ -1,25 +1,47 @@
-package com.googlecode.rubex;
+package com.googlecode.rubex.orderbook;
 
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public class SimpleOrderBook implements OrderBook
+/**
+ * Simple implementation of {@link OrderBook} interface based on 
+ * {@link TreeSet}.
+ * 
+ * @author Mikhail Vladimirov
+ */
+public class SimpleOrderBook extends AbstractOrderBook
 {
-    private final SortedSet<OrderBookEntry> bids = new TreeSet<OrderBookEntry> (new BidComparator ());
-    private final SortedSet<OrderBookEntry> asks = new TreeSet<OrderBookEntry> (new AskComparator ());
+    private final SortedSet<OrderBookEntry> bids = 
+        new TreeSet<OrderBookEntry> (
+            new EntryComparator (OrderBookEntrySide.BID));
+    
+    private final SortedSet<OrderBookEntry> asks = 
+        new TreeSet<OrderBookEntry> (
+            new EntryComparator (OrderBookEntrySide.ASK));
     
     private long sequentialNumber = 0L;
     
+    /**
+     * Create new empty order book.
+     */
+    public SimpleOrderBook ()
+    {
+        // Do nothing
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public OrderBookEntryHandler placeEntry (long timestamp,
-        OrderBookEntryType type, long quantity, long limitPrice,
+        OrderBookEntrySide side, long quantity, long limitPrice,
         OrderBookEntryCallback callback, Object closure)
         throws OrderBookException
     {
-        if (type == null)
-            throw new IllegalArgumentException ("Type is null");
+        if (side == null)
+            throw new IllegalArgumentException ("Side is null");
         
         if (quantity <= 0)
             throw new IllegalArgumentException ("Quantity <= 0");
@@ -30,11 +52,15 @@ public class SimpleOrderBook implements OrderBook
         if (callback == null)
             throw new IllegalArgumentException ("Callback is null");
         
-        OrderBookEntry newEntry = new OrderBookEntry (sequentialNumber++, type, limitPrice, quantity, callback, closure);
+        OrderBookEntry newEntry = 
+            new OrderBookEntry (
+                sequentialNumber++, 
+                side, limitPrice, quantity, 
+                callback, closure);
         
         Iterator <OrderBookEntry> i;
         
-        switch (type)
+        switch (side)
         {
         case BID:
             i = asks.iterator ();
@@ -43,62 +69,73 @@ public class SimpleOrderBook implements OrderBook
             i = bids.iterator ();
             break;
         default:
-            throw new Error ("Unknown order book entry type: " + type);
+            throw new Error ("Unknown order book entry side: " + side);
         }
         
         while (i.hasNext () && newEntry.active)
         {
             OrderBookEntry entry = i.next ();
+            long entryLimitPrice = entry.limitPrice; 
             
             boolean fits;
             
             if (limitPrice > 0)
             {
-                switch (type)
+                switch (side)
                 {
                 case BID:
-                    fits = limitPrice >= entry.limitPrice; 
+                    fits = limitPrice >= entryLimitPrice; 
                     break;
                 case ASK:
-                    fits = limitPrice <= entry.limitPrice; 
+                    fits = limitPrice <= entryLimitPrice; 
                     break;
                 default:
-                    throw new Error ("Unknown order book entry type: " + type);
+                    throw new Error (
+                        "Unknown order book entry side: " + side);
                 }
             }
             else fits = true;
             
             if (fits)
             {
-                long tradeQuantity = Math.min (newEntry.unfilledQuantity, entry.unfilledQuantity);
+                long tradeQuantity = 
+                    Math.min (
+                        newEntry.unfilledQuantity, entry.unfilledQuantity);
                 
-                fillEntry (timestamp, newEntry, tradeQuantity, entry.limitPrice);
-                fillEntry (timestamp, entry, tradeQuantity, entry.limitPrice);
+                fillEntry (
+                    timestamp, newEntry, tradeQuantity, entryLimitPrice);
+                fillEntry (
+                    timestamp, entry, tradeQuantity, entryLimitPrice);
+                
+                fireOnTrade (timestamp, tradeQuantity, entryLimitPrice);
+                fireOnQuote (timestamp, entry.side, entryLimitPrice, -tradeQuantity);
             }
             else break;
         }
         
         if (newEntry.active)
         {
-            if (newEntry.limitPrice > 0)
+            if (limitPrice > 0)
             {
-                switch (type)
+                switch (side)
                 {
                 case BID:
                     bids.add (newEntry); 
+                    fireOnQuote (timestamp, OrderBookEntrySide.BID, limitPrice, newEntry.unfilledQuantity);
                     break;
                 case ASK:
                     asks.add (newEntry); 
+                    fireOnQuote (timestamp, OrderBookEntrySide.ASK, limitPrice, newEntry.unfilledQuantity);
                     break;
                 default:
-                    throw new Error ("Unknown order book entry type: " + type);
+                    throw new Error ("Unknown order book entry side: " + side);
                 }
             }
             else 
                 cancelEntry (timestamp, newEntry);
         }
 
-        switch (type)
+        switch (side)
         {
         case BID:
             cleanup (asks); 
@@ -107,13 +144,14 @@ public class SimpleOrderBook implements OrderBook
             cleanup (bids); 
             break;
         default:
-            throw new Error ("Unknown order book entry type: " + type);
+            throw new Error ("Unknown order book entry side: " + side);
         }
         
         return newEntry;
     }
     
-    private void fillEntry (long timestamp, OrderBookEntry entry, long quantity, long price)
+    private void fillEntry (
+        long timestamp, OrderBookEntry entry, long quantity, long price)
     {
         if (entry == null)
             throw new IllegalArgumentException ("Entry is null");
@@ -125,7 +163,8 @@ public class SimpleOrderBook implements OrderBook
             throw new IllegalArgumentException ("Price <= 0");
             
         if (entry.getOrderBook () != this)
-            throw new IllegalArgumentException ("This order book entry is not mine");
+            throw new IllegalArgumentException (
+                "This order book entry is not mine");
 
         if (!entry.active)
             throw new IllegalStateException ("Entry is not active");
@@ -144,16 +183,18 @@ public class SimpleOrderBook implements OrderBook
         }
     }
     
-    private void cancelEntry (long timestamp, OrderBookEntry entry)
+    private void cancelEntry (long timestamp, OrderBookEntry entry) 
+        throws OrderBookException
     {
         if (entry == null)
             throw new IllegalArgumentException ("Entry is null");
         
         if (entry.getOrderBook () != this)
-            throw new IllegalArgumentException ("This order book entry is not mine");
+            throw new IllegalArgumentException (
+                "This order book entry is not mine");
 
         if (!entry.active)
-            throw new IllegalStateException ("Entry is not active");
+            throw new OrderBookException ("Entry is not active");
         
         entry.active = false;
         entry.callback.onCanceled (timestamp, entry);
@@ -177,7 +218,7 @@ public class SimpleOrderBook implements OrderBook
     
     private class OrderBookEntry implements OrderBookEntryHandler
     {
-        public final OrderBookEntryType type;
+        public final OrderBookEntrySide side;
         public final long sequentialNumber;
         public final long limitPrice;
         public long unfilledQuantity;
@@ -185,11 +226,13 @@ public class SimpleOrderBook implements OrderBook
         public final Object closure;
         public boolean active = true;
         
-        public OrderBookEntry (long sequentialNumber, OrderBookEntryType type, long limitPrice,
-                long unfilledQuantity, OrderBookEntryCallback callback, Object closure)
+        public OrderBookEntry (
+            long sequentialNumber, 
+            OrderBookEntrySide side, long limitPrice, long unfilledQuantity, 
+            OrderBookEntryCallback callback, Object closure)
         {
-            if (type == null)
-                throw new IllegalArgumentException ("Type is null");
+            if (side == null)
+                throw new IllegalArgumentException ("Side is null");
             
             if (limitPrice < 0)
                 throw new IllegalArgumentException ("Price < 0");
@@ -201,7 +244,7 @@ public class SimpleOrderBook implements OrderBook
                 throw new IllegalArgumentException ("Callback is null");
             
             this.sequentialNumber = sequentialNumber;
-            this.type = type;
+            this.side = side;
             this.limitPrice = limitPrice;
             this.unfilledQuantity = unfilledQuantity;
             this.closure = closure;
@@ -209,9 +252,9 @@ public class SimpleOrderBook implements OrderBook
         }
 
         @Override
-        public OrderBookEntryType getEntryType ()
+        public OrderBookEntrySide getEntrySide ()
         {
-            return type;
+            return side;
         }
 
         @Override
@@ -233,20 +276,22 @@ public class SimpleOrderBook implements OrderBook
         }
 
         @Override
-        public void cancel (long timestamp)
+        public void cancel (long timestamp) throws OrderBookException
         {
             cancelEntry (timestamp, this);
             
-            switch (type)
+            switch (side)
             {
             case BID:
                 cleanup (bids);
+                fireOnQuote (timestamp, OrderBookEntrySide.BID, limitPrice, -unfilledQuantity);
                 break;
             case ASK:
                 cleanup (asks);
+                fireOnQuote (timestamp, OrderBookEntrySide.ASK, limitPrice, -unfilledQuantity);
                 break;
             default:
-                throw new Error ("Unknown order book entry type: " + type);
+                throw new Error ("Unknown order book entry side: " + side);
             }
         }
         
@@ -256,40 +301,31 @@ public class SimpleOrderBook implements OrderBook
         }
     }
     
-    private static class BidComparator implements Comparator<OrderBookEntry>
+    private static class EntryComparator implements Comparator<OrderBookEntry>
     {
-        @Override
-        public int compare (OrderBookEntry leftEntry, OrderBookEntry rightEntry)
+        private final boolean isBid;
+        
+        public EntryComparator (OrderBookEntrySide side)
         {
-            if (leftEntry == null)
-                throw new IllegalArgumentException ("Left entry is null");
+            if (side == null)
+                throw new IllegalArgumentException ();
             
-            if (rightEntry == null)
-                throw new IllegalArgumentException ("Right entry is null");
-            
-            if (leftEntry == rightEntry) return 0;
-            
-            long leftPrice = leftEntry.limitPrice;
-            long rightPrice = rightEntry.limitPrice;
-            
-            if (leftPrice > rightPrice) return -1;
-            else if (leftPrice < rightPrice) return 1;
-            else
+            switch (side)
             {
-                long leftSequentialNumber = leftEntry.sequentialNumber;
-                long rightSequentialNumber = rightEntry.sequentialNumber;
-                
-                if (leftSequentialNumber < rightSequentialNumber) return -1;
-                else if (leftSequentialNumber > rightSequentialNumber) return 1;
-                else return 0;
+            case BID:
+                isBid = true;
+                break;
+            case ASK:
+                isBid = false;
+                break;
+            default:
+                throw new Error ("Unknown order book entry side: " + side);
             }
         }
-    }
-    
-    private static class AskComparator implements Comparator<OrderBookEntry>
-    {
+        
         @Override
-        public int compare (OrderBookEntry leftEntry, OrderBookEntry rightEntry)
+        public int compare (
+            OrderBookEntry leftEntry, OrderBookEntry rightEntry)
         {
             if (leftEntry == null)
                 throw new IllegalArgumentException ("Left entry is null");
@@ -302,15 +338,17 @@ public class SimpleOrderBook implements OrderBook
             long leftPrice = leftEntry.limitPrice;
             long rightPrice = rightEntry.limitPrice;
             
-            if (leftPrice < rightPrice) return -1;
-            else if (leftPrice > rightPrice) return 1;
+            if (leftPrice > rightPrice) return isBid ? -1 : 1;
+            else if (leftPrice < rightPrice) return isBid ? 1 : -1;
             else
             {
                 long leftSequentialNumber = leftEntry.sequentialNumber;
                 long rightSequentialNumber = rightEntry.sequentialNumber;
                 
-                if (leftSequentialNumber < rightSequentialNumber) return -1;
-                else if (leftSequentialNumber > rightSequentialNumber) return 1;
+                if (leftSequentialNumber < rightSequentialNumber) 
+                    return -1;
+                else if (leftSequentialNumber > rightSequentialNumber) 
+                    return 1;
                 else return 0;
             }
         }
