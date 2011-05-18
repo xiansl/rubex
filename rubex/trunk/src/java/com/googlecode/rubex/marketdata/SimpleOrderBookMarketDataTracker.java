@@ -10,6 +10,7 @@ import com.googlecode.rubex.orderbook.OrderBookEntrySide;
 import com.googlecode.rubex.orderbook.event.OrderBookListener;
 import com.googlecode.rubex.orderbook.event.OrderBookQuoteEvent;
 import com.googlecode.rubex.orderbook.event.OrderBookTradeEvent;
+import com.googlecode.rubex.utils.LongUtils;
 
 /**
  * Simple implementation of {@link MarketDataTracker} interface that listens to 
@@ -41,9 +42,9 @@ public class SimpleOrderBookMarketDataTracker
         lastTradeQuantity = event.getQuantity ();
         lastTradeTimestamp = event.getTimestamp ();
         
-        totalVolume = safeAdd (totalVolume, event.getQuantity ());
-        totalValue = safeAdd (
-            totalValue, safeMultiply (event.getQuantity (), event.getPrice ()));
+        totalVolume = LongUtils.safeAdd (totalVolume, event.getQuantity ());
+        totalValue = LongUtils.safeAdd (
+            totalValue, LongUtils.safeMultiply (event.getQuantity (), event.getPrice ()));
     }
 
     /**
@@ -61,7 +62,7 @@ public class SimpleOrderBookMarketDataTracker
         switch (side)
         {
         case BID:
-            quantity = safeAdd (
+            quantity = LongUtils.safeAdd (
                 bids.containsKey (priceObject) ? 
                     bids.get (priceObject).longValue () : 0, 
                 event.getQuantityDelta ()); 
@@ -70,7 +71,7 @@ public class SimpleOrderBookMarketDataTracker
             else bids.remove (priceObject);
             break;
         case ASK:
-            quantity = safeAdd (
+            quantity = LongUtils.safeAdd (
                 asks.containsKey (priceObject) ? 
                     asks.get (priceObject).longValue () : 0, 
                 event.getQuantityDelta ());
@@ -214,14 +215,14 @@ public class SimpleOrderBookMarketDataTracker
      * {@inheritDoc}
      */
     @Override
-    public long getBidQuantityAbove (int price)
+    public long getBidQuantityAbove (long price)
     {
         long result = 0;
         
         for (Map.Entry <Long, Long> entry: bids.descendingMap ().entrySet ())
         {
             if (entry.getKey ().longValue () >= price)
-                result = safeAdd (result, entry.getValue ().longValue ());
+                result = LongUtils.safeAdd (result, entry.getValue ().longValue ());
             else break;
         }
         
@@ -232,46 +233,18 @@ public class SimpleOrderBookMarketDataTracker
      * {@inheritDoc}
      */
     @Override
-    public long getAskQuantityBelow (int price)
+    public long getAskQuantityBelow (long price)
     {
         long result = 0;
         
         for (Map.Entry <Long, Long> entry: asks.entrySet ())
         {
             if (entry.getKey ().longValue () <= price)
-                result = safeAdd (result, entry.getValue ().longValue ());
+                result = LongUtils.safeAdd (result, entry.getValue ().longValue ());
             else break;
         }
         
         return result;
-    }
-    
-    private static long safeAdd (long x, long y)
-    {
-        if (x > 0 && y > 0 && (x > Long.MAX_VALUE - y))
-            throw new RuntimeException ("Long number overflow");
-        
-        if (x < 0 && y < 0 && (x < Long.MIN_VALUE - y))
-            throw new RuntimeException ("Long number overflow");
-        
-        return x + y;
-    }
-    
-    private static long safeMultiply (long x, long y)
-    {
-        if (x > 0 && y > 0 && (x > Long.MAX_VALUE / y))
-            throw new RuntimeException ("Long number overflow");
-        
-        if (x < 0 && y < 0 && (x < Long.MAX_VALUE / y))
-            throw new RuntimeException ("Long number overflow");
-        
-        if (x < 0 && y > 0 && (x < Long.MIN_VALUE / y))
-            throw new RuntimeException ("Long number overflow");
-        
-        if (x > 0 && y < 0 && (x > Long.MIN_VALUE / y))
-            throw new RuntimeException ("Long number overflow");
-        
-        return x * y;
     }
     
     private static class MyQuote implements Quote

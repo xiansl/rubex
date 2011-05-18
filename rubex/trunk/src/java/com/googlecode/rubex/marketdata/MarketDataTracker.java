@@ -81,7 +81,7 @@ public interface MarketDataTracker
      * @param price threshold price
      * @return total bid quantity above given threshold price
      */
-    public long getBidQuantityAbove (int price);
+    public long getBidQuantityAbove (long price);
     
     /**
      * Get total ask quantity in quantity units with price <= given threshold 
@@ -90,7 +90,7 @@ public interface MarketDataTracker
      * @param price threshold price
      * @return total ask quantity below given threshold price
      */
-    public long getAskQuantityBelow (int price);
+    public long getAskQuantityBelow (long price);
     
     /**
      * Represents single quote.
