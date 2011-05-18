@@ -15,4 +15,6 @@ public interface Order
     public long getFilledValue ();
     
     public Object getClosure ();
+    
+    public void cancel (long timestamp) throws OrderException;
 }
