@@ -1,34 +1,36 @@
-package com.googlecode.rubex;
+package com.googlecode.rubex.message;
 
-import java.net.ServerSocket;
-import java.util.logging.LogManager;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StreamCorruptedException;
 
-import com.googlecode.rubex.message.Message;
-import com.googlecode.rubex.server.SimpleServerSocketServer;
-import com.googlecode.rubex.server.event.ConnectionEvent;
-import com.googlecode.rubex.server.event.ConnectionListener;
-
-public class Rubex
+public class MessageReader
 {
-    public static void main (String[] args) throws Exception
+    private final DataInputStream dataInput;
+    
+    public MessageReader (InputStream input)
     {
-        LogManager.getLogManager ().readConfiguration (
-            Rubex.class.getResourceAsStream ("logging.properties"));
+        if (input == null)
+            throw new IllegalArgumentException ("Input stream is null");
         
-        SimpleServerSocketServer server = new SimpleServerSocketServer (new ServerSocket (1234));
+        dataInput = new DataInputStream (new BufferedInputStream (input));
+    }
+    
+    public Message readMessage () throws IOException
+    {
+        long magic = dataInput.readLong ();
+        if (magic != MessageWriter.MAGIC)
+            throw new StreamCorruptedException ("Invalid magic number");
         
-        server.addConnectionListener (new ConnectionListener()
-        {
-            @Override
-            public void onNewConnection (ConnectionEvent event)
-            {
-                event.getConnection ().sendMessage (new MyMessage ("Hello, World".getBytes ()));
-            }
-        });
+        int length = dataInput.readInt ();
+        if (length < 0)
+            throw new StreamCorruptedException ("Message length is negative");
         
-        server.start ();
-        Thread.sleep (10000);
-        server.shutdown ();
+        byte [] result = new byte [length];
+        dataInput.read (result);
+        return new MyMessage (result);
     }
     
     private static class MyMessage implements Message

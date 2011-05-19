@@ -15,7 +15,7 @@ import com.googlecode.rubex.orderbook.event.OrderBookTradeEvent;
 public abstract class AbstractOrderBook implements OrderBook
 {
     private final List <OrderBookListener> listeners = 
-        new ArrayList<OrderBookListener> ();
+        new ArrayList <OrderBookListener> ();
 
     /**
      * Create new abstract order book.
