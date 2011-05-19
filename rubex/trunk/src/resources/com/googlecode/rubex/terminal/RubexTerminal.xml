@@ -1,0 +1,13 @@
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<properties>
+  <entry key="connect-dialog.title">Connect</entry>
+  <entry key="connect-dialog.host-label.text">Host:</entry>
+  <entry key="connect-dialog.port-label.text">Port:</entry>
+  <entry key="connect-dialog.key-file-label.text">Key file:</entry>
+  <entry key="connect-dialog.generate-key-button.text">Generate new key</entry>
+  <entry key="connect-dialog.user-name-label.text">User name:</entry>
+  <entry key="connect-dialog.key-password-label.text">Key password:</entry>
+  <entry key="connect-dialog.public-key-label.text">Public key:</entry>
+  <entry key="connect-dialog.connect-button.text">Connect</entry>
+</properties>
