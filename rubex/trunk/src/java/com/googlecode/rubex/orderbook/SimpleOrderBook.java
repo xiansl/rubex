@@ -14,11 +14,11 @@ import java.util.TreeSet;
 public class SimpleOrderBook extends AbstractOrderBook
 {
     private final SortedSet<OrderBookEntry> bids = 
-        new TreeSet<OrderBookEntry> (
+        new TreeSet <OrderBookEntry> (
             new EntryComparator (OrderBookEntrySide.BID));
     
     private final SortedSet<OrderBookEntry> asks = 
-        new TreeSet<OrderBookEntry> (
+        new TreeSet <OrderBookEntry> (
             new EntryComparator (OrderBookEntrySide.ASK));
     
     private long sequentialNumber = 0L;
