@@ -9,11 +9,19 @@ import com.googlecode.rubex.orderbook.OrderBookEntrySide;
 import com.googlecode.rubex.orderbook.OrderBookException;
 import com.googlecode.rubex.orderbook.SimpleOrderBook;
 
+/**
+ * Simple implementation of {@link Exchange} interface.
+ * 
+ * @author Mikhail Vladimirov
+ */
 public class SimpleExchange implements Exchange
 {
     private final OrderBook orderBook = new SimpleOrderBook ();
     private final MarketDataTracker marketDataTracker;
     
+    /**
+     * Create new instance of simlpe exchange.
+     */
     public SimpleExchange ()
     {
         SimpleOrderBookMarketDataTracker marketDataTracker = new SimpleOrderBookMarketDataTracker ();
@@ -21,6 +29,9 @@ public class SimpleExchange implements Exchange
         this.marketDataTracker = marketDataTracker;
     }
     
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public MarketOrder createMarketOrder (long timestamp, OrderSide side,
         long quantity, OrderCallback callback, Object closure)
@@ -41,6 +52,9 @@ public class SimpleExchange implements Exchange
         return order;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public LimitOrder createLimitOrder (long timestamp, OrderSide side,
         long quantity, long limitPrice, OrderTimeInForce timeInForce,
@@ -64,6 +78,9 @@ public class SimpleExchange implements Exchange
         return order;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StopOrder createStopOrder (long timestamp, OrderSide side,
         long quantity, long stopPrice, OrderCallback callback, Object closure)
@@ -72,6 +89,9 @@ public class SimpleExchange implements Exchange
         throw new OrderException ("Stop orders are not supported yet");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StopLimitOrder createStopLimitOrder (long timestamp, OrderSide side,
         long quantity, long stopPrice, long limitPrice, OrderCallback callback,
@@ -80,6 +100,9 @@ public class SimpleExchange implements Exchange
         throw new OrderException ("Stop limit order are not supported yet");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public IcebergOrder createIcebergOrder (long timestamp, OrderSide side,
         long quantity, long limitPrice, long visibleQuantity,
@@ -151,37 +174,13 @@ public class SimpleExchange implements Exchange
     
     private class MyLimitOrder extends AbstractLimitOrder implements OrderBookEntryCallback
     {
-        private final long limitPrice;
-        private final OrderTimeInForce timeInForce;
-        
         private OrderBookEntryHandler entryHandler = null;
         private boolean done = false;
 
         public MyLimitOrder (OrderSide side, long orderedQuantity, long limitPrice, OrderTimeInForce timeInForce,
                 OrderCallback callback, Object closure)
         {
-            super (side, orderedQuantity, callback, closure);
-            
-            if (limitPrice <= 0)
-                throw new IllegalArgumentException ("Limit price <= 0");
-
-            if (timeInForce == null)
-                throw new IllegalArgumentException ("Time in force is null");
-            
-            this.limitPrice = limitPrice;
-            this.timeInForce = timeInForce;
-        }
-
-        @Override
-        public long getLimitPrice ()
-        {
-            return limitPrice;
-        }
-
-        @Override
-        public OrderTimeInForce getTimeInForce ()
-        {
-            return timeInForce;
+            super (side, orderedQuantity, limitPrice, timeInForce, callback, closure);
         }
 
         @Override
@@ -193,7 +192,7 @@ public class SimpleExchange implements Exchange
         }
 
         @Override
-        public MarketOrder replaceWithLimitOrder (long timestamp,
+        public LimitOrder replaceWithLimitOrder (long timestamp,
             long newQuantity, long newLimitPrice,
             OrderTimeInForce newTimeInForce, OrderCallback callback,
             Object closure) throws OrderException
@@ -319,7 +318,7 @@ public class SimpleExchange implements Exchange
         {
             try
             {
-                entryHandler = orderBook.placeEntry (timestamp, convertSide (getSide ()), getOrderedQuantity (), limitPrice, this, this);
+                entryHandler = orderBook.placeEntry (timestamp, convertSide (getSide ()), getOrderedQuantity (), getLimitPrice (), this, this);
             }
             catch (OrderBookException ex)
             {
