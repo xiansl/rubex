@@ -5,10 +5,13 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -24,6 +27,18 @@ import com.googlecode.rubex.utils.SwingL10NHelper;
 
 public class ConnectDialog extends JDialog
 {
+    private final static Image KEY_ICON_16x16 = 
+        Toolkit.getDefaultToolkit ().createImage (ConnectDialog.class.getResource ("key-icon-16x16.png"));
+    
+    private final static Image KEY_ICON_32x32 = 
+        Toolkit.getDefaultToolkit ().createImage (ConnectDialog.class.getResource ("key-icon-32x32.png"));
+    
+    private final static Image KEY_ICON_48x48 = 
+        Toolkit.getDefaultToolkit ().createImage (ConnectDialog.class.getResource ("key-icon-48x48.png"));
+    
+    private final static Image KEY_ICON_64x64 = 
+        Toolkit.getDefaultToolkit ().createImage (ConnectDialog.class.getResource ("key-icon-64x64.png"));
+    
     private final JTextField hostField;
     private final JTextField portField;
     private final JTextField keyFileField;
@@ -174,6 +189,7 @@ public class ConnectDialog extends JDialog
         recursivelyAddMouseMotionListener (this, new EntropyMouseMotionListener ());
         
         SwingL10NHelper.localizeDialogTitle (this, "connect-dialog.title");
+        setIconImages (Arrays.asList (KEY_ICON_16x16, KEY_ICON_32x32, KEY_ICON_48x48, KEY_ICON_64x64));
         pack ();
         setModal (true);
         setDefaultCloseOperation (JDialog.DISPOSE_ON_CLOSE);
