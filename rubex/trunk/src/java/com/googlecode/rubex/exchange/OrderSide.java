@@ -1,6 +1,19 @@
 package com.googlecode.rubex.exchange;
 
+/**
+ * Side of the order.
+ * 
+ * @author Mikhail Vladimirov
+ */
 public enum OrderSide
 {
-    BUY, SELL
+    /**
+     * Order to buy securities.
+     */
+    BUY, 
+    
+    /**
+     * Order to sell securities.
+     */
+    SELL
 }
