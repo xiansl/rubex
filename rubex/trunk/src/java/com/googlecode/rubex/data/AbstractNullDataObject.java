@@ -5,7 +5,8 @@ package com.googlecode.rubex.data;
  * 
  * @author Mikhail Vladimirov
  */
-public abstract class AbstractNullDataObject implements NullDataObject
+public abstract class AbstractNullDataObject 
+    extends AbstractDataObject implements NullDataObject
 {
     /**
      * {@inheritDoc}

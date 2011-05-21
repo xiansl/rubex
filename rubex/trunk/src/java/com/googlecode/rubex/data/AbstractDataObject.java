@@ -13,6 +13,6 @@ public abstract class AbstractDataObject implements DataObject
     @Override
     public String toString ()
     {
-        return super.toString ();
+        return DataObjectUtils.formatAsString (this);
     }
 }
