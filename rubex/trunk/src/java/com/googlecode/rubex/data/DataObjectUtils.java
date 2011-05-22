@@ -1,9 +1,12 @@
 package com.googlecode.rubex.data;
 
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import com.googlecode.rubex.data.parser.DataObjectParser;
+import com.googlecode.rubex.data.parser.ParseException;
 import com.googlecode.rubex.utils.StringUtils;
 
 /**
@@ -33,6 +36,31 @@ public class DataObjectUtils
             throw new IllegalArgumentException ("Data object is null");
         
         return dataObject.accept (STRING_FORMATTING_VISITOR);
+    }
+    
+    /**
+     * Parses human-readable string representation of data object.
+     * 
+     * @param string human-readable representation of data object
+     * @return reconstructed data object
+     */
+    public static DataObject parseFromString (String string)
+    {
+        if (string == null)
+            throw new IllegalArgumentException ("String is null");
+        
+        DataObjectParser parser = 
+            new DataObjectParser (new StringReader (string));
+        
+        try
+        {
+            return parser.dataObject ();
+        }
+        catch (ParseException ex)
+        {
+            throw new IllegalArgumentException (
+                "Invalid string representation of data object");
+        }
     }
     
     /**
