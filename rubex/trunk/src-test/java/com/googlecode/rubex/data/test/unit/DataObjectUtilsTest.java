@@ -14,6 +14,7 @@ import com.googlecode.rubex.data.NullDataObject;
 import com.googlecode.rubex.data.RealDataObject;
 import com.googlecode.rubex.data.StringDataObject;
 import com.googlecode.rubex.data.StructureDataObject;
+import com.googlecode.rubex.data.StructureDataObjectBuilder;
 
 public class DataObjectUtilsTest
 {
@@ -170,5 +171,100 @@ public class DataObjectUtilsTest
                     DataObjectUtils.createStringDataObject ("Bar"), 
                     DataObjectUtils.createStringDataObject ("FooBar")
                 }).toString ());
+    }
+    
+    @Test
+    public void testParseFromString () throws Exception
+    {
+        assertEquals (
+            DataObjectUtils.createNullDataObject (),
+            DataObjectUtils.parseFromString ("null"));
+        assertEquals (
+            DataObjectUtils.createBooleanDataObject (true),
+            DataObjectUtils.parseFromString ("true"));
+        assertEquals (
+            DataObjectUtils.createBooleanDataObject (false),
+            DataObjectUtils.parseFromString ("false"));
+        assertEquals (
+            DataObjectUtils.createIntegerDataObject (0),
+            DataObjectUtils.parseFromString ("0"));
+        assertEquals (
+            DataObjectUtils.createIntegerDataObject (0),
+            DataObjectUtils.parseFromString ("-0"));
+        assertEquals (
+            DataObjectUtils.createIntegerDataObject (0),
+            DataObjectUtils.parseFromString ("000"));
+        assertEquals (
+            DataObjectUtils.createIntegerDataObject (0),
+            DataObjectUtils.parseFromString ("-000"));
+        assertEquals (
+            DataObjectUtils.createIntegerDataObject (1234567890123456789L),
+            DataObjectUtils.parseFromString ("1234567890123456789"));
+        assertEquals (
+            DataObjectUtils.createIntegerDataObject (-1234567890123456789L),
+            DataObjectUtils.parseFromString ("-1234567890123456789"));
+        assertEquals (
+            DataObjectUtils.createRealDataObject (123456789.0123456789),
+            DataObjectUtils.parseFromString ("123456789.0123456789"));
+        assertEquals (
+            DataObjectUtils.createRealDataObject (-123456789.0123456789),
+            DataObjectUtils.parseFromString ("-123456789.0123456789"));
+        assertEquals (
+            DataObjectUtils.createRealDataObject (-123456789.0123456789E-11),
+            DataObjectUtils.parseFromString ("-123456789.0123456789E-11"));
+        assertEquals (
+            DataObjectUtils.createStringDataObject ("foo"),
+            DataObjectUtils.parseFromString ("\"foo\""));
+        assertEquals (
+            DataObjectUtils.createStringDataObject ("foo"),
+            DataObjectUtils.parseFromString ("\'foo\'"));
+        assertEquals (
+            DataObjectUtils.createStringDataObject ("\'\"\\\n\r\t\b\f\0"),
+            DataObjectUtils.parseFromString (
+                "\"\\\'\\\"\\\\\\n\\r\\t\\b\\f\\0\""));
+        assertEquals (
+            DataObjectUtils.createStringDataObject ("\'\"\\\n\r\t\b\f\0"),
+            DataObjectUtils.parseFromString (
+                "\'\\\'\\\"\\\\\\n\\r\\t\\b\\f\\0\'"));
+        assertEquals (
+            DataObjectUtils.createBinaryDataObject (
+                new byte [] {
+                    (byte)0x00, 
+                    (byte)0x01, 
+                    (byte)0xE5, 
+                    (byte)0xF7, 
+                    (byte)0xFF}),
+            DataObjectUtils.parseFromString ("[00 01 E5 F7 FF]"));
+        assertEquals (
+            DataObjectUtils.createListDataObject (),
+            DataObjectUtils.parseFromString ("()"));
+        assertEquals (
+            DataObjectUtils.createListDataObject (
+                DataObjectUtils.createStringDataObject ("foo")
+            ),
+            DataObjectUtils.parseFromString ("(\"foo\")"));
+        assertEquals (
+            DataObjectUtils.createListDataObject (
+                DataObjectUtils.createStringDataObject ("foo"),
+                DataObjectUtils.createStringDataObject ("bar"),
+                DataObjectUtils.createStringDataObject ("foobar")
+            ),
+            DataObjectUtils.parseFromString ("(\"foo\", \"bar\", \"foobar\")"));
+        assertEquals (
+            new StructureDataObjectBuilder ().
+                getStructureDataObject (),
+            DataObjectUtils.parseFromString ("{}"));
+        assertEquals (
+            new StructureDataObjectBuilder ().
+                addStringField ("foo", "foo").getStructureDataObject (),
+            DataObjectUtils.parseFromString ("{foo: \"foo\"}"));
+        assertEquals (
+            new StructureDataObjectBuilder ().
+                addStringField ("foo", "foo").
+                addStringField ("bar", "bar").
+                addStringField ("foobar", "foobar").
+                getStructureDataObject (),
+            DataObjectUtils.parseFromString (
+                "{foo: \"foo\", bar: \"bar\", foobar: \"foobar\"}"));
     }
 }
