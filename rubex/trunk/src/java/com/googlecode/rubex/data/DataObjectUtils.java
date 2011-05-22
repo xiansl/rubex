@@ -35,26 +35,55 @@ public class DataObjectUtils
         return dataObject.accept (STRING_FORMATTING_VISITOR);
     }
     
+    /**
+     * Create null data object.
+     * 
+     * @return null data object created
+     */
     public static NullDataObject createNullDataObject ()
     {
         return MyNullDataObject.INSTANCE;
     }
 
+    /**
+     * Create boolean data object with given boolean value.
+     * 
+     * @param value value for the object
+     * @return boolean data object created
+     */
     public static BooleanDataObject createBooleanDataObject (boolean value)
     {
         return value ? MyBooleanDataObject.TRUE : MyBooleanDataObject.FALSE;
     }
     
+    /**
+     * Create integer data object with given long value.
+     * 
+     * @param value value for the object
+     * @return integer data object created
+     */
     public static IntegerDataObject createIntegerDataObject (long value)
     {
         return new MyIntegerDataObject (value);
     }
     
+    /**
+     * Create real data object with given double value.
+     * 
+     * @param value value for the object
+     * @return real data object created
+     */
     public static RealDataObject createRealDataObject (double value)
     {
         return new MyRealDataObject (value);
     }
     
+    /**
+     * Create string data object with given string value.
+     * 
+     * @param value value for the object
+     * @return string data object created
+     */
     public static StringDataObject createStringDataObject (String value)
     {
         if (value == null)
@@ -63,6 +92,12 @@ public class DataObjectUtils
         return new MyStringDataObject (value);
     }
     
+    /**
+     * Create binary data object with given binary value.
+     * 
+     * @param value value for the object
+     * @return boolean data object created
+     */
     public static BinaryDataObject createBinaryDataObject (byte [] value)
     {
         if (value == null)
@@ -71,6 +106,12 @@ public class DataObjectUtils
         return new MyBinaryDataObject (value);
     }
     
+    /**
+     * Create list data object with given elements.
+     * 
+     * @param elements an array of list elements
+     * @return list data object created
+     */
     public static ListDataObject createListDataObject (DataObject ... elements)
     {
         if (elements == null)
@@ -79,6 +120,13 @@ public class DataObjectUtils
         return new MyListDataObject (elements);
     }
     
+    /**
+     * Create structure data object with given field names and field values.
+     * 
+     * @param fieldNames an array of field names
+     * @param fieldValues an array of field values
+     * @return structure data object created
+     */
     public static StructureDataObject createStructureDataObject (
         String [] fieldNames, DataObject [] fieldValues)
     {
@@ -241,7 +289,7 @@ public class DataObjectUtils
         }
 
         @Override
-        public int getInt ()
+        public int getInt () throws UnsupportedOperationException
         {
             if (value < Integer.MIN_VALUE || value > Integer.MAX_VALUE)
                 throw new UnsupportedOperationException (
@@ -393,7 +441,8 @@ public class DataObjectUtils
         private final HashMap <String, DataObject> fields =
             new LinkedHashMap <String, DataObject> ();
         
-        public MyStructureDataObject (String [] fieldNames, DataObject [] fieldValues)
+        public MyStructureDataObject (
+            String [] fieldNames, DataObject [] fieldValues)
         {
             if (fieldNames == null)
                 throw new IllegalArgumentException ("Field names is null");
@@ -405,7 +454,8 @@ public class DataObjectUtils
             
             if (count != fieldValues.length)
                 throw new IllegalArgumentException (
-                    "Length of field names does not match length of field values");
+                    "Length of field names does not match " + 
+                    "length of field values");
             
             for (int i = 0; i < count; i++)
             {
@@ -418,7 +468,8 @@ public class DataObjectUtils
                 
                 if (!StringUtils.isJavaIdentifier (fieldName))
                     throw new IllegalArgumentException (
-                        "Field name is not a valid Java identifier: " + fieldName);
+                        "Field name is not a valid Java identifier: " + 
+                        fieldName);
                         
                 if (fields.containsKey (fieldName))
                     throw new IllegalArgumentException (
@@ -438,14 +489,24 @@ public class DataObjectUtils
         }
 
         @Override
-        public DataObject getField (String name)
+        public boolean hasField (String name)
+        {
+            if (name == null)
+                throw new IllegalArgumentException ("Name is null");
+            
+            return fields.containsKey (name);
+        }
+        
+        @Override
+        public DataObject getField (String name) throws IllegalArgumentException
         {
             if (name == null)
                 throw new IllegalArgumentException ("Name is null");
             
             if (fields.containsKey (name))
                 return fields.get (name);
-            else throw new IllegalArgumentException ("No field with sich name: " + name);
+            else throw new IllegalArgumentException (
+                "No field with sich name: " + name);
         }
     }
 }
