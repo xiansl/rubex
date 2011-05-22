@@ -13,8 +13,9 @@ public interface Order
     public OrderType getType ();
     
     /**
-     * Accept visitor by calling appropriate visitXXX method on it.
+     * Accept visitor by calling appropriate <code>visitXXX<code> method on it.
      * 
+     * @param <T> type of visit result
      * @param visitor visitor to accept
      * @return visit result
      */
