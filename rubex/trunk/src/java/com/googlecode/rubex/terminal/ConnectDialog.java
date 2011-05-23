@@ -48,6 +48,7 @@ public class ConnectDialog extends JDialog
     private final JTextField keyPasswordField;
     private final JTextArea publicKeyArea;
     private final JTextField entropyField;
+    private final JButton cancelButton;
     private final JButton connectButton;
     
     public ConnectDialog ()
@@ -135,6 +136,10 @@ public class ConnectDialog extends JDialog
         userPasswordBox.add (keyPasswordField);
         
         Box topBox = Box.createVerticalBox ();
+        topBox.setBorder (
+            BorderFactory.createCompoundBorder (
+                BorderFactory.createEtchedBorder (),
+                BorderFactory.createEmptyBorder (5, 5, 5, 5)));
         topBox.add (hostPortBox);
         topBox.add (Box.createVerticalStrut (5));
         topBox.add (keyFileBox);
@@ -165,12 +170,18 @@ public class ConnectDialog extends JDialog
         entropyField.setBorder (BorderFactory.createEtchedBorder ());
         entropyField.setEnabled (false);
         
+        cancelButton = new JButton ();
+        SwingL10NHelper.localizeAbstractButtonText (
+            cancelButton, "connect-dialog.cancel-button.text");
+        
         connectButton = new JButton ();
         SwingL10NHelper.localizeAbstractButtonText (
             connectButton, "connect-dialog.connect-button.text");
 
         Box bottomBox = Box.createHorizontalBox ();
         bottomBox.add (entropyField);
+        bottomBox.add (Box.createHorizontalStrut (5));
+        bottomBox.add (cancelButton);
         bottomBox.add (Box.createHorizontalStrut (5));
         bottomBox.add (connectButton);
         
@@ -211,7 +222,7 @@ public class ConnectDialog extends JDialog
     private class EntropyMouseMotionListener 
         implements MouseMotionListener
     {
-        private final byte [] buffer = new byte [24];
+        private final byte [] buffer = new byte [16];
         private final SecureRandom secureRandom;
 
         public EntropyMouseMotionListener ()
