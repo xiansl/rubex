@@ -43,6 +43,8 @@ public class DataObjectUtils
      * 
      * @param string human-readable representation of data object
      * @return reconstructed data object
+     * @throws IllegalArgumentException if string contents is not a valid 
+     *         human-readable representation of data object
      */
     public static DataObject parseFromString (String string)
     {

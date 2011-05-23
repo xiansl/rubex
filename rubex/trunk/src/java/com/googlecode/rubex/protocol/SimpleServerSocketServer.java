@@ -1,4 +1,4 @@
-package com.googlecode.rubex.server;
+package com.googlecode.rubex.protocol;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.googlecode.rubex.server.event.ConnectionEvent;
-import com.googlecode.rubex.server.event.MessageEvent;
-import com.googlecode.rubex.server.event.MessageListener;
+import com.googlecode.rubex.protocol.event.ConnectionEvent;
+import com.googlecode.rubex.protocol.event.MessageEvent;
+import com.googlecode.rubex.protocol.event.MessageListener;
 
 /**
  * Simple implementation of {@link Server} interface based on 

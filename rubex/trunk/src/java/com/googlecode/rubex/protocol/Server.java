@@ -1,6 +1,6 @@
-package com.googlecode.rubex.server;
+package com.googlecode.rubex.protocol;
 
-import com.googlecode.rubex.server.event.ConnectionListener;
+import com.googlecode.rubex.protocol.event.ConnectionListener;
 
 /**
  * Network server that can accept connections.
