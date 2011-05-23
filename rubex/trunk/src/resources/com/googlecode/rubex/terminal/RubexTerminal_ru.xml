@@ -4,10 +4,11 @@
   <entry key="connect-dialog.title">Установка соединения</entry>
   <entry key="connect-dialog.host-label.text">Сервер:</entry>
   <entry key="connect-dialog.port-label.text">Порт:</entry>
-  <entry key="connect-dialog.key-file-label.text">Ключ:</entry>
+  <entry key="connect-dialog.key-file-label.text">Файл ключа:</entry>
   <entry key="connect-dialog.generate-key-button.text">Создать новый ключ</entry>
   <entry key="connect-dialog.user-name-label.text">Имя пользователя:</entry>
   <entry key="connect-dialog.key-password-label.text">Пароль ключа:</entry>
   <entry key="connect-dialog.public-key-label.text">Публичный ключ:</entry>
+  <entry key="connect-dialog.cancel-button.text">Отмена</entry>
   <entry key="connect-dialog.connect-button.text">Соединиться</entry>
 </properties>
