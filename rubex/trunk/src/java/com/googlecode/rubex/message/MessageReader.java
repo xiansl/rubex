@@ -79,5 +79,11 @@ public class MessageReader
             
             System.arraycopy (data, sourceOffset, destination, destinationOffset, length);
         }
+        
+        @Override
+        public byte[] getBytes ()
+        {
+            return data.clone ();
+        }
     }
 }

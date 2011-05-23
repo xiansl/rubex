@@ -1,4 +1,4 @@
-package com.googlecode.rubex.server;
+package com.googlecode.rubex.protocol;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -116,9 +116,6 @@ public class SimpleSocketConnection extends AbstractConnection
     @Override
     public synchronized void shutdown ()
     {
-        if (!started)
-            throw new IllegalStateException ("Connection is not started");
-        
         if (shutdown)
             throw new IllegalStateException ("Connection is already shutdown");
         
@@ -129,7 +126,7 @@ public class SimpleSocketConnection extends AbstractConnection
         
         try
         {
-            socket.close ();
+            socket.shutdownInput ();
         }
         catch (IOException ex)
         {
@@ -223,7 +220,11 @@ public class SimpleSocketConnection extends AbstractConnection
                 }
                 
                 if (message == KISS_OF_DEATH)
+                {
+                    socket.close ();
+                    
                     break;
+                }
                 
                 writer.writeMessage (message);
             }
@@ -269,6 +270,12 @@ public class SimpleSocketConnection extends AbstractConnection
         @Override
         public void copyData (int sourceOffset, byte[] destination,
             int destinationOffset, int length)
+        {
+            throw new UnsupportedOperationException ();
+        }
+        
+        @Override
+        public byte[] getBytes ()
         {
             throw new UnsupportedOperationException ();
         }
