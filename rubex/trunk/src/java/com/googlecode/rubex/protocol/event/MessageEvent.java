@@ -2,16 +2,16 @@ package com.googlecode.rubex.protocol.event;
 
 import java.util.EventObject;
 
-import com.googlecode.rubex.message.Message;
-
 /**
  * Contains details about message-related event.
  * 
+ * @param <MessageType> type of the messages
+ * 
  * @author Mikhail Vladimirov
  */
-public class MessageEvent extends EventObject
+public class MessageEvent <MessageType> extends EventObject
 {
-    private final Message message;
+    private final MessageType message;
     
     /**
      * Create new message event with given event source and message.
@@ -19,7 +19,7 @@ public class MessageEvent extends EventObject
      * @param source event source
      * @param message message
      */
-    public MessageEvent (Object source, Message message)
+    public MessageEvent (Object source, MessageType message)
     {
         super (source);
         
@@ -32,7 +32,7 @@ public class MessageEvent extends EventObject
     /**
      * Return message of this event.
      */
-    public Message getMessage ()
+    public MessageType getMessage ()
     {
         return message;
     }

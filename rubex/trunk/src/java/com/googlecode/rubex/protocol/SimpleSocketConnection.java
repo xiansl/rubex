@@ -17,7 +17,8 @@ import com.googlecode.rubex.message.MessageWriter;
  * 
  * @author Mikhail Vladimirov
  */
-public class SimpleSocketConnection extends AbstractConnection
+public class SimpleSocketConnection 
+    extends AbstractConnection <Message>
 {
     private final static Message KISS_OF_DEATH = new KissOfDeath ();
     
@@ -221,8 +222,6 @@ public class SimpleSocketConnection extends AbstractConnection
                 
                 if (message == KISS_OF_DEATH)
                 {
-                    socket.close ();
-                    
                     break;
                 }
                 
@@ -237,6 +236,19 @@ public class SimpleSocketConnection extends AbstractConnection
                     logger.log (
                         Level.SEVERE, "Error while sending messages: " + name,
                         ex);
+            }
+        }
+        finally
+        {
+            try
+            {
+                socket.close ();
+            }
+            catch (IOException ex)
+            {
+                if (logger.isLoggable (Level.WARNING))
+                    logger.log (
+                        Level.WARNING, "Cannot close socket: " + name, ex);
             }
         }
         

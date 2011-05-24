@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.googlecode.rubex.message.Message;
 import com.googlecode.rubex.protocol.event.ConnectionEvent;
 import com.googlecode.rubex.protocol.event.MessageEvent;
 import com.googlecode.rubex.protocol.event.MessageListener;
@@ -27,19 +28,20 @@ public class SimpleServerSocketServer extends AbstractServer
     private final String name;
     private final Thread acceptorThread;
     
-    private final List <Connection> connections = 
-        new ArrayList <Connection> ();
+    private final List <Connection <Message>> connections = 
+        new ArrayList <Connection <Message>> ();
     
-    private final MessageListener messageListener = new MessageListener()
+    private final MessageListener <Message> messageListener = 
+        new MessageListener <Message>()
     {
         @Override
-        public void onMessage (MessageEvent event)
+        public void onMessage (MessageEvent <Message> event)
         {
             // Do nothing
         }
         
         @Override
-        public void onDisconnect (ConnectionEvent event)
+        public void onDisconnect (ConnectionEvent <Message> event)
         {
             disconnected (event.getConnection ());
         }
@@ -92,6 +94,7 @@ public class SimpleServerSocketServer extends AbstractServer
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings ("unchecked")
     @Override
     public synchronized void shutdown ()
     {
@@ -103,10 +106,11 @@ public class SimpleServerSocketServer extends AbstractServer
         
         shutdown = true;
         
-        Connection [] connections = this.connections.toArray (
-            new Connection [this.connections.size ()]);
+        Connection <Message> [] connections = 
+            (Connection <Message> [])this.connections.toArray (
+                new Connection <?> [this.connections.size ()]);
         
-        for (Connection connection: connections)
+        for (Connection <Message> connection: connections)
         {
             try
             {
@@ -135,10 +139,12 @@ public class SimpleServerSocketServer extends AbstractServer
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings ("unchecked")
     @Override
-    public synchronized Connection[] getAllConnections ()
+    public synchronized Connection <Message> [] getAllConnections ()
     {
-        return connections.toArray (new Connection [connections.size ()]);
+        return (Connection <Message> [])connections.
+            toArray (new Connection <?> [connections.size ()]);
     }
     
     private synchronized boolean isShutdown ()
@@ -154,7 +160,7 @@ public class SimpleServerSocketServer extends AbstractServer
                 socket.getInetAddress () + ":" + socket.getPort () + ": " + 
                 name);
         
-        Connection connection = new SimpleSocketConnection (socket);
+        Connection <Message> connection = new SimpleSocketConnection (socket);
         connection.addMessageListener (messageListener);
         
         connections.add (connection);
@@ -164,7 +170,7 @@ public class SimpleServerSocketServer extends AbstractServer
         connection.start ();
     }
     
-    private synchronized void disconnected (Connection connection)
+    private synchronized void disconnected (Connection <Message> connection)
     {
         connections.remove (connection);
     }

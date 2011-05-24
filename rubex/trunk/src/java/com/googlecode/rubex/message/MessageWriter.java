@@ -8,6 +8,7 @@ import java.io.OutputStream;
 public class MessageWriter
 {
     public final static long MAGIC = 0x4D4553534147453EL;
+    public final static long EOM_SIGN = 0x3C4547415353454DL;
     
     private final DataOutputStream dataOutput;
     
@@ -32,6 +33,7 @@ public class MessageWriter
         dataOutput.writeLong (MAGIC);
         dataOutput.writeInt (size);
         dataOutput.write (buffer);
+        dataOutput.writeLong (EOM_SIGN);
         dataOutput.flush ();
     }
 }

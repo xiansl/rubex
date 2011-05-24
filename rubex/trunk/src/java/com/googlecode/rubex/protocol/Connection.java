@@ -1,35 +1,36 @@
 package com.googlecode.rubex.protocol;
 
-import com.googlecode.rubex.message.Message;
 import com.googlecode.rubex.protocol.event.MessageListener;
 
 /**
  * Network connection that allows to send and receive messages.
  * 
+ * @param <MessageType> type of the messages to be send and received
+ * 
  * @author Mikhail Vladimirov
  */
-public interface Connection
+public interface Connection <MessageType>
 {
     /**
      * Add listener to be notified about incoming messages and disconnect.
      * 
      * @param listener listener to be added
      */
-    public void addMessageListener (MessageListener listener);
+    public void addMessageListener (MessageListener <MessageType> listener);
     
     /**
      * Remove message listener
      * 
      * @param listener listener to be removed
      */
-    public void removeMessageListener (MessageListener listener);
+    public void removeMessageListener (MessageListener <MessageType> listener);
     
     /**
      * Send message via connection
      * 
      * @param message message to be sent
      */
-    public void sendMessage (Message message);
+    public void sendMessage (MessageType message);
 
     /**
      * Start the connection.

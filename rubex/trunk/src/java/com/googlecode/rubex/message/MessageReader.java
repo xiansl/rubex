@@ -30,6 +30,11 @@ public class MessageReader
         
         byte [] result = new byte [length];
         dataInput.read (result);
+        
+        long eom_sign = dataInput.readLong ();
+        if (eom_sign != MessageWriter.EOM_SIGN)
+            throw new StreamCorruptedException ("Invalid EOM sign number");
+        
         return new MyMessage (result);
     }
     

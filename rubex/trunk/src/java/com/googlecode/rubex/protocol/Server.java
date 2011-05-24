@@ -1,5 +1,6 @@
 package com.googlecode.rubex.protocol;
 
+import com.googlecode.rubex.message.Message;
 import com.googlecode.rubex.protocol.event.ConnectionListener;
 
 /**
@@ -14,14 +15,15 @@ public interface Server
      * 
      * @param listener listener to be added
      */
-    public void addConnectionListener (ConnectionListener listener);
+    public void addConnectionListener (ConnectionListener <Message> listener);
     
     /**
      * Remove connection listener.
      * 
      * @param listener listener to be removed
      */
-    public void removeConnectionListener (ConnectionListener listener);
+    public void removeConnectionListener (
+        ConnectionListener <Message> listener);
 
     /**
      * Start the server.
@@ -38,5 +40,5 @@ public interface Server
      * 
      * @return an array of {@link Connection} objects
      */
-    public Connection [] getAllConnections ();
+    public Connection <Message> [] getAllConnections ();
 }

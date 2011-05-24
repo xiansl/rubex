@@ -3,6 +3,7 @@ package com.googlecode.rubex.protocol;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.googlecode.rubex.message.Message;
 import com.googlecode.rubex.protocol.event.ConnectionEvent;
 import com.googlecode.rubex.protocol.event.ConnectionListener;
 
@@ -13,14 +14,14 @@ import com.googlecode.rubex.protocol.event.ConnectionListener;
  */
 public abstract class AbstractServer implements Server
 {
-    private final List <ConnectionListener> connectionListeners = 
-        new ArrayList <ConnectionListener> ();
+    private final List <ConnectionListener <Message>> connectionListeners = 
+        new ArrayList <ConnectionListener <Message>> ();
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void addConnectionListener (ConnectionListener listener)
+    public void addConnectionListener (ConnectionListener <Message> listener)
     {
         if (listener == null)
             throw new IllegalArgumentException ("Listener is null");
@@ -32,7 +33,7 @@ public abstract class AbstractServer implements Server
      * {@inheritDoc}
      */
     @Override
-    public void removeConnectionListener (ConnectionListener listener)
+    public void removeConnectionListener (ConnectionListener <Message> listener)
     {
         if (listener == null)
             throw new IllegalArgumentException ("Listener is null");
@@ -45,10 +46,11 @@ public abstract class AbstractServer implements Server
      * 
      * @return an array of {@link ConnectionListener} objects
      */
-    public ConnectionListener [] getAllConnectionListeners ()
+    @SuppressWarnings ("unchecked")
+    public ConnectionListener <Message> [] getAllConnectionListeners ()
     {
-        return connectionListeners.toArray (
-            new ConnectionListener[connectionListeners.size ()]);
+        return (ConnectionListener <Message> [])connectionListeners.toArray (
+            new ConnectionListener <?> [connectionListeners.size ()]);
     }
     
     /**
@@ -56,14 +58,14 @@ public abstract class AbstractServer implements Server
      * 
      * @param connection newly accepted connection 
      */
-    protected void fireOnNewConnection (Connection connection)
+    protected void fireOnNewConnection (Connection <Message> connection)
     {
-        ConnectionEvent event = null;
+        ConnectionEvent <Message> event = null;
         
-        for (ConnectionListener listener: connectionListeners)
+        for (ConnectionListener <Message> listener: connectionListeners)
         {
             if (event == null)
-                event = new ConnectionEvent (this, connection);
+                event = new ConnectionEvent <Message> (this, connection);
             
             listener.onNewConnection (event);
         }
