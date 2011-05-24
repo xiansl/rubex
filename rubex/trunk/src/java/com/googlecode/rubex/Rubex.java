@@ -3,8 +3,10 @@ package com.googlecode.rubex;
 import java.net.ServerSocket;
 import java.util.logging.LogManager;
 
+import com.googlecode.rubex.data.DataObject;
 import com.googlecode.rubex.data.StructureDataObjectBuilder;
-import com.googlecode.rubex.protocol.DataConnection;
+import com.googlecode.rubex.message.Message;
+import com.googlecode.rubex.protocol.Connection;
 import com.googlecode.rubex.protocol.SimpleDataConnection;
 import com.googlecode.rubex.protocol.SimpleServerSocketServer;
 import com.googlecode.rubex.protocol.event.ConnectionEvent;
@@ -19,15 +21,15 @@ public class Rubex
         
         SimpleServerSocketServer server = new SimpleServerSocketServer (new ServerSocket (1234));
         
-        server.addConnectionListener (new ConnectionListener()
+        server.addConnectionListener (new ConnectionListener <Message> ()
         {
             @Override
-            public void onNewConnection (ConnectionEvent event)
+            public void onNewConnection (ConnectionEvent <Message> event)
             {
-                DataConnection dataConnection =
+                Connection <DataObject> dataConnection =
                     new SimpleDataConnection (event.getConnection ());
                 
-                dataConnection.sendData (
+                dataConnection.sendMessage (
                     new StructureDataObjectBuilder ().
                         addStringField ("messageType", "ORDER").
                         addStringField ("symbol", "BTC").

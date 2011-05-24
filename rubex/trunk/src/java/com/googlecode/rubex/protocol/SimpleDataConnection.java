@@ -13,17 +13,18 @@ import com.googlecode.rubex.protocol.event.MessageEvent;
 import com.googlecode.rubex.protocol.event.MessageListener;
 
 /**
- * Simple implementation of {@link DataConnection} interface based on 
+ * Simple implementation of {@link Connection <DataObject>} interface based on 
  * {@link Connection} object.
  * 
  * @author Mikhail Vladimirov
  */
-public class SimpleDataConnection extends AbstractDataConnection
+public class SimpleDataConnection 
+    extends AbstractConnection <DataObject>
 {
     private final static Logger logger = 
         Logger.getLogger (SimpleDataConnection.class.getName ());
     
-    private final Connection connection;
+    private final Connection <Message> connection;
     
     /**
      * Create new simple data connection based on given {@link Connection} 
@@ -31,21 +32,22 @@ public class SimpleDataConnection extends AbstractDataConnection
      * 
      * @param connection {@link Connection} object to base on
      */
-    public SimpleDataConnection (Connection connection)
+    public SimpleDataConnection (Connection <Message> connection)
     {
         if (connection == null)
             throw new IllegalArgumentException ("Connection is null");
         
         this.connection = connection;
         
-        connection.addMessageListener (new MyMessageListener (this));
+        connection.addMessageListener (
+            new MyMessageListener (this));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void sendData (DataObject data)
+    public void sendMessage (DataObject data)
     {
         if (data == null)
             throw new IllegalArgumentException ("Data is null");
@@ -78,7 +80,7 @@ public class SimpleDataConnection extends AbstractDataConnection
         connection.shutdown ();
     }
     
-    private void onMessage (MessageEvent event)
+    private void onMessage (MessageEvent <Message> event)
     {
         if (event == null)
             throw new IllegalArgumentException ("Event is null");
@@ -111,15 +113,16 @@ public class SimpleDataConnection extends AbstractDataConnection
         if (logger.isLoggable (Level.FINE))
             logger.fine ("Data object received: " + dataObject);
         
-        fireOnIncomingData (dataObject);
+        fireOnMessage (dataObject);
     }
 
-    private void onDisconnect (ConnectionEvent event)
+    private void onDisconnect (ConnectionEvent <Message> event)
     {
         fireOnDisconnect ();
     }
     
-    private static class MyMessageListener implements MessageListener
+    private static class MyMessageListener 
+        implements MessageListener <Message>
     {
         private final WeakReference <SimpleDataConnection> connection;
 
@@ -133,7 +136,7 @@ public class SimpleDataConnection extends AbstractDataConnection
         }
         
         @Override
-        public void onMessage (MessageEvent event)
+        public void onMessage (MessageEvent <Message> event)
         {
             SimpleDataConnection connection = this.connection.get ();
             if (connection != null)
@@ -141,7 +144,7 @@ public class SimpleDataConnection extends AbstractDataConnection
         }
 
         @Override
-        public void onDisconnect (ConnectionEvent event)
+        public void onDisconnect (ConnectionEvent <Message> event)
         {
             SimpleDataConnection connection = this.connection.get ();
             if (connection != null)
