@@ -17,5 +17,6 @@ public interface ConnectionListener <MessageType>
      * 
      * @param event new connection event details
      */
-    public void onNewConnection (ConnectionEvent <MessageType> event);
+    public void onNewConnection (
+        ConnectionEvent <MessageType> event);
 }

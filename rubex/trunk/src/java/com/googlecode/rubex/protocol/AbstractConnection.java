@@ -17,14 +17,16 @@ import com.googlecode.rubex.protocol.event.MessageListener;
 public abstract class AbstractConnection <MessageType> 
     implements Connection <MessageType>
 {
-    private final List <MessageListener <MessageType>> messageListeners = 
-        new ArrayList <MessageListener <MessageType>> ();
+    private final List <MessageListener <? super MessageType>> 
+        messageListeners = 
+            new ArrayList <MessageListener <? super MessageType>> ();
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void addMessageListener (MessageListener <MessageType> listener)
+    public void addMessageListener (
+        MessageListener <? super MessageType> listener)
     {
         if (listener == null)
             throw new IllegalArgumentException ("Listener is null");
@@ -36,7 +38,8 @@ public abstract class AbstractConnection <MessageType>
      * {@inheritDoc}
      */
     @Override
-    public void removeMessageListener (MessageListener <MessageType> listener)
+    public void removeMessageListener (
+        MessageListener <? super MessageType> listener)
     {
         if (listener == null)
             throw new IllegalArgumentException ("Listener is null");
@@ -65,7 +68,7 @@ public abstract class AbstractConnection <MessageType>
     {
         MessageEvent <MessageType> event = null;
         
-        for (MessageListener <MessageType> listener: messageListeners)
+        for (MessageListener <? super MessageType> listener: messageListeners)
         {
             if (event == null)
                 event = new MessageEvent <MessageType> (this, message);
@@ -81,7 +84,7 @@ public abstract class AbstractConnection <MessageType>
     {
         ConnectionEvent <MessageType> event = null;
         
-        for (MessageListener <MessageType> listener: messageListeners)
+        for (MessageListener <? super MessageType> listener: messageListeners)
         {
             if (event == null)
                 event = new ConnectionEvent <MessageType> (this, this);

@@ -12,16 +12,19 @@ import com.googlecode.rubex.protocol.event.ConnectionListener;
  * 
  * @author Mikhail Vladimirov
  */
-public abstract class AbstractServer implements Server
+public abstract class AbstractServer <MessageType> 
+    implements Server <MessageType>
 {
-    private final List <ConnectionListener <Message>> connectionListeners = 
-        new ArrayList <ConnectionListener <Message>> ();
+    private final List <ConnectionListener <MessageType>> 
+        connectionListeners = 
+            new ArrayList <ConnectionListener <MessageType>> ();
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void addConnectionListener (ConnectionListener <Message> listener)
+    public void addConnectionListener (
+        ConnectionListener <MessageType> listener)
     {
         if (listener == null)
             throw new IllegalArgumentException ("Listener is null");
@@ -33,7 +36,8 @@ public abstract class AbstractServer implements Server
      * {@inheritDoc}
      */
     @Override
-    public void removeConnectionListener (ConnectionListener <Message> listener)
+    public void removeConnectionListener (
+        ConnectionListener <MessageType> listener)
     {
         if (listener == null)
             throw new IllegalArgumentException ("Listener is null");
@@ -58,14 +62,15 @@ public abstract class AbstractServer implements Server
      * 
      * @param connection newly accepted connection 
      */
-    protected void fireOnNewConnection (Connection <Message> connection)
+    protected void fireOnNewConnection (Connection <MessageType> connection)
     {
-        ConnectionEvent <Message> event = null;
+        ConnectionEvent <MessageType> event = null;
         
-        for (ConnectionListener <Message> listener: connectionListeners)
+        for (ConnectionListener <MessageType> listener: 
+            connectionListeners)
         {
             if (event == null)
-                event = new ConnectionEvent <Message> (this, connection);
+                event = new ConnectionEvent <MessageType> (this, connection);
             
             listener.onNewConnection (event);
         }

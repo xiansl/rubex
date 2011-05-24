@@ -54,7 +54,8 @@ public class SimpleDataConnection
         
         try
         {
-            connection.sendMessage (new MyMessage (data.toString ().getBytes ("UTF-8")));
+            connection.sendMessage (
+                new MyMessage (data.toString ().getBytes ("UTF-8")));
         }
         catch (UnsupportedEncodingException ex)
         {
@@ -80,7 +81,7 @@ public class SimpleDataConnection
         connection.shutdown ();
     }
     
-    private void onMessage (MessageEvent <Message> event)
+    private void onMessage (MessageEvent <? extends Message> event)
     {
         if (event == null)
             throw new IllegalArgumentException ("Event is null");
@@ -104,7 +105,9 @@ public class SimpleDataConnection
         catch (IllegalArgumentException ex)
         {
             if (logger.isLoggable (Level.WARNING))
-                logger.log (Level.WARNING, "Cannot parse incoming message: " + messageString, ex);
+                logger.log (
+                    Level.WARNING, 
+                    "Cannot parse incoming message: " + messageString, ex);
             
             shutdown ();
             return;
@@ -116,7 +119,7 @@ public class SimpleDataConnection
         fireOnMessage (dataObject);
     }
 
-    private void onDisconnect (ConnectionEvent <Message> event)
+    private void onDisconnect (ConnectionEvent <? extends Message> event)
     {
         fireOnDisconnect ();
     }
@@ -136,7 +139,7 @@ public class SimpleDataConnection
         }
         
         @Override
-        public void onMessage (MessageEvent <Message> event)
+        public void onMessage (MessageEvent <? extends Message> event)
         {
             SimpleDataConnection connection = this.connection.get ();
             if (connection != null)
@@ -144,7 +147,7 @@ public class SimpleDataConnection
         }
 
         @Override
-        public void onDisconnect (ConnectionEvent <Message> event)
+        public void onDisconnect (ConnectionEvent <? extends Message> event)
         {
             SimpleDataConnection connection = this.connection.get ();
             if (connection != null)
@@ -189,14 +192,17 @@ public class SimpleDataConnection
             int size = data.length;
             
             if (sourceOffset + length > size)
-                throw new IllegalArgumentException ("Source offset + length > size");
+                throw new IllegalArgumentException (
+                    "Source offset + length > size");
             
             int destinationSize = destination.length;
             
             if (destinationOffset + length > destinationSize)
-                throw new IllegalArgumentException ("Destination offset + length > destination size");
+                throw new IllegalArgumentException (
+                    "Destination offset + length > destination size");
             
-            System.arraycopy (data, sourceOffset, destination, destinationOffset, length);
+            System.arraycopy (
+                data, sourceOffset, destination, destinationOffset, length);
         }
         
         @Override

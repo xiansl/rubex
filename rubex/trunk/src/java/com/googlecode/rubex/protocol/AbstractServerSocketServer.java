@@ -14,34 +14,35 @@ import com.googlecode.rubex.protocol.event.MessageEvent;
 import com.googlecode.rubex.protocol.event.MessageListener;
 
 /**
- * Simple implementation of {@link Server} interface based on 
+ * Abstract implementation of {@link Server} interface based on 
  * {@link ServerSocket}.
  * 
  * @author Mikhail Vladimirov
  */
-public class SimpleServerSocketServer extends AbstractServer
+public abstract class AbstractServerSocketServer <MessageType>
+    extends AbstractServer <MessageType>
 {
     private final static Logger logger = 
-        Logger.getLogger (SimpleServerSocketServer.class.getName ());
+        Logger.getLogger (AbstractServerSocketServer.class.getName ());
     
     private final ServerSocket serverSocket;
     private final String name;
     private final Thread acceptorThread;
     
-    private final List <Connection <Message>> connections = 
-        new ArrayList <Connection <Message>> ();
+    private final List <Connection <?>> connections = 
+        new ArrayList <Connection <?>> ();
     
-    private final MessageListener <Message> messageListener = 
-        new MessageListener <Message>()
+    private final MessageListener <Object> messageListener = 
+        new MessageListener <Object> ()
     {
         @Override
-        public void onMessage (MessageEvent <Message> event)
+        public void onMessage (MessageEvent <? extends Object> event)
         {
             // Do nothing
         }
         
         @Override
-        public void onDisconnect (ConnectionEvent <Message> event)
+        public void onDisconnect (ConnectionEvent <? extends Object> event)
         {
             disconnected (event.getConnection ());
         }
@@ -55,7 +56,7 @@ public class SimpleServerSocketServer extends AbstractServer
      * 
      * @param serverSocket server socket to base on
      */
-    public SimpleServerSocketServer (ServerSocket serverSocket)
+    public AbstractServerSocketServer (ServerSocket serverSocket)
     {
         if (serverSocket == null)
             throw new IllegalArgumentException ("Server socket is null");
@@ -141,11 +142,19 @@ public class SimpleServerSocketServer extends AbstractServer
      */
     @SuppressWarnings ("unchecked")
     @Override
-    public synchronized Connection <Message> [] getAllConnections ()
+    public synchronized Connection <MessageType> [] getAllConnections ()
     {
-        return (Connection <Message> [])connections.
+        return (Connection <MessageType> [])connections.
             toArray (new Connection <?> [connections.size ()]);
     }
+    
+    /**
+     * Create connection for socket.
+     * 
+     * @param socket socket to create connection for
+     * @return {@link Connection <MessageType>} object
+     */
+    protected abstract Connection <MessageType> createConnection (Socket socket);
     
     private synchronized boolean isShutdown ()
     {
@@ -160,7 +169,7 @@ public class SimpleServerSocketServer extends AbstractServer
                 socket.getInetAddress () + ":" + socket.getPort () + ": " + 
                 name);
         
-        Connection <Message> connection = new SimpleSocketConnection (socket);
+        Connection <MessageType> connection = createConnection (socket);
         connection.addMessageListener (messageListener);
         
         connections.add (connection);
@@ -170,7 +179,7 @@ public class SimpleServerSocketServer extends AbstractServer
         connection.start ();
     }
     
-    private synchronized void disconnected (Connection <Message> connection)
+    private synchronized void disconnected (Connection <?> connection)
     {
         connections.remove (connection);
     }
