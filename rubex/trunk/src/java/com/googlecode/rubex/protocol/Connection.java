@@ -16,14 +16,16 @@ public interface Connection <MessageType>
      * 
      * @param listener listener to be added
      */
-    public void addMessageListener (MessageListener <MessageType> listener);
+    public void addMessageListener (
+        MessageListener <? super MessageType> listener);
     
     /**
      * Remove message listener
      * 
      * @param listener listener to be removed
      */
-    public void removeMessageListener (MessageListener <MessageType> listener);
+    public void removeMessageListener (
+        MessageListener <? super MessageType> listener);
     
     /**
      * Send message via connection

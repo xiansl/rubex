@@ -15,12 +15,12 @@ public interface MessageListener <MessageType>
      * 
      * @param event new message event details
      */
-    public void onMessage (MessageEvent <MessageType> event);
+    public void onMessage (MessageEvent <? extends MessageType> event);
     
     /**
      * Called when connection was broken.
      * 
      * @param event broken connection event details
      */
-    public void onDisconnect (ConnectionEvent <MessageType> event);
+    public void onDisconnect (ConnectionEvent <? extends MessageType> event);
 }
