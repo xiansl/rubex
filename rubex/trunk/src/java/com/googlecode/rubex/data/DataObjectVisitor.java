@@ -12,64 +12,72 @@ public interface DataObjectVisitor <T>
     /**
      * Visit null data object.
      * 
-     * @param null data object to be visited
+     * @param nullDataObject data object to be visited
      * @return visit result
      */
-    public T visitNullDataObject (NullDataObject nullDataObject);
+    public T visitNullDataObject (
+        NullDataObject nullDataObject);
     
     /**
      * Visit boolean data object.
      * 
-     * @param boolean data object to be visited
+     * @param booleanDataObject data object to be visited
      * @return visit result
      */
-    public T visitBooleanDataObject (BooleanDataObject booleanDataObject);
+    public T visitBooleanDataObject (
+        BooleanDataObject booleanDataObject);
     
     /**
      * Visit integer data object.
      * 
-     * @param integer data object to be visited
+     * @param integerDataObject data object to be visited
      * @return visit result
      */
-    public T visitIntegerDataObject (IntegerDataObject integerDataObject);
+    public T visitIntegerDataObject (
+        IntegerDataObject integerDataObject);
     
     /**
      * Visit real data object.
      * 
-     * @param real data object to be visited
+     * @param realDataObject data object to be visited
      * @return visit result
      */
-    public T visitRealDataObject (RealDataObject realDataObject);
+    public T visitRealDataObject (
+        RealDataObject realDataObject);
     
     /**
      * Visit string data object.
      * 
-     * @param string data object to be visited
+     * @param stringDataObject data object to be visited
      * @return visit result
      */
-    public T visitStringDataObject (StringDataObject stringDataObject);
+    public T visitStringDataObject (
+        StringDataObject stringDataObject);
     
     /**
      * Visit binary data object.
      * 
-     * @param binary data object to be visited
+     * @param binaryDataObject data object to be visited
      * @return visit result
      */
-    public T visitBinaryDataObject (BinaryDataObject binaryDataObject);
+    public T visitBinaryDataObject (
+        BinaryDataObject binaryDataObject);
     
     /**
      * Visit list data object.
      * 
-     * @param list data object to be visited
+     * @param listDataObject data object to be visited
      * @return visit result
      */
-    public T visitListDataObject (ListDataObject listDataObject);
+    public T visitListDataObject (
+        ListDataObject listDataObject);
     
     /**
      * Visit structure data object.
      * 
-     * @param structure data object to be visited
+     * @param structureDataObject data object to be visited
      * @return visit result
      */
-    public T visitStructureDataObject (StructureDataObject structureDataObject);
+    public T visitStructureDataObject (
+        StructureDataObject structureDataObject);
 }
