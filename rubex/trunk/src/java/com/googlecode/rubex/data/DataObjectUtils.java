@@ -296,8 +296,19 @@ public class DataObjectUtils
         }
         catch (InvocationTargetException ex)
         {
+            Throwable cause = ex.getCause ();
+            
+            if (cause instanceof RuntimeException)
+                throw (RuntimeException)cause;
+            
+            if (cause instanceof Error)
+                throw (Error)cause;
+            
+            if (cause == null)
+                throw new RuntimeException ("Exception in setter: " + setter);
+            
             throw new RuntimeException (
-                "Exception in setter: " + setter, ex);
+                cause.getMessage (), cause);
         }
     }
 
