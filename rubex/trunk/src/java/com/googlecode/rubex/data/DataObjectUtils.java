@@ -13,6 +13,7 @@ import java.util.Set;
 
 import com.googlecode.rubex.data.parser.DataObjectParser;
 import com.googlecode.rubex.data.parser.ParseException;
+import com.googlecode.rubex.data.parser.TokenMgrError;
 import com.googlecode.rubex.utils.StringUtils;
 
 /**
@@ -68,6 +69,11 @@ public class DataObjectUtils
         {
             throw new IllegalArgumentException (
                 "Invalid string representation of data object");
+        }
+        catch (TokenMgrError ex)
+        {
+            throw new IllegalArgumentException (
+            "Invalid string representation of data object");
         }
     }
     
@@ -182,24 +188,31 @@ public class DataObjectUtils
     /**
      * Map structure fields to setters of Java bean.
      * 
-     * @param structureDataObject structure data object to map field of
+     * @param dataObject data object to map field of
      * @param bean Java bean to map to setters of
      * @return names of unused fields as string array
      */
     public static String [] mapFields (
-        StructureDataObject structureDataObject,
+        DataObject dataObject,
         Object bean)
     {
-        if (structureDataObject == null)
+        if (dataObject == null)
             throw new IllegalArgumentException (
-                "Structure data object is null");
+                "Data object is null");
+        
+        if (!DataObjectType.STRUCTURE.equals (dataObject.getType ()))
+            throw new IllegalArgumentException (
+                "Structure data object expected: " + dataObject);
+        
+        StructureDataObject structureDataObject =
+            (StructureDataObject)dataObject;
         
         if (bean == null)
             throw new IllegalArgumentException ("Bean is null");
         
         Set <String> unusedFields = 
             new HashSet <String> (
-                    Arrays.asList (structureDataObject.getFieldNames ()));
+                Arrays.asList (structureDataObject.getFieldNames ()));
         Method [] methods = bean.getClass ().getMethods ();
         for (Method method: methods)
         {
