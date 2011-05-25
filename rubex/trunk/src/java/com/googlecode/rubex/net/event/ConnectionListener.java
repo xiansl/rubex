@@ -1,4 +1,4 @@
-package com.googlecode.rubex.protocol.event;
+package com.googlecode.rubex.net.event;
 
 import java.util.EventListener;
 

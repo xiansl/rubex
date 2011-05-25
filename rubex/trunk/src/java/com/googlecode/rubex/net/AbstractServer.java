@@ -1,11 +1,11 @@
-package com.googlecode.rubex.protocol;
+package com.googlecode.rubex.net;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.googlecode.rubex.message.Message;
-import com.googlecode.rubex.protocol.event.ConnectionEvent;
-import com.googlecode.rubex.protocol.event.ConnectionListener;
+import com.googlecode.rubex.net.event.ConnectionEvent;
+import com.googlecode.rubex.net.event.ConnectionListener;
 
 /**
  * Abstract base class for implementations of {@link Server} interface.

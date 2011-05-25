@@ -3,10 +3,10 @@ package com.googlecode.rubex.server;
 import java.net.ServerSocket;
 
 import com.googlecode.rubex.data.DataObject;
-import com.googlecode.rubex.protocol.Connection;
-import com.googlecode.rubex.protocol.DataServerSocketServer;
-import com.googlecode.rubex.protocol.event.ConnectionEvent;
-import com.googlecode.rubex.protocol.event.ConnectionListener;
+import com.googlecode.rubex.net.Connection;
+import com.googlecode.rubex.net.DataServerSocketServer;
+import com.googlecode.rubex.net.event.ConnectionEvent;
+import com.googlecode.rubex.net.event.ConnectionListener;
 
 public class RubexServer
 {
