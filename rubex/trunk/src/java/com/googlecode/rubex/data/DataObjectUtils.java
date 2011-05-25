@@ -1,9 +1,15 @@
 package com.googlecode.rubex.data;
 
 import java.io.StringReader;
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Set;
 
 import com.googlecode.rubex.data.parser.DataObjectParser;
 import com.googlecode.rubex.data.parser.ParseException;
@@ -171,6 +177,334 @@ public class DataObjectUtils
                 "Length of field names does not match length of field values");
         
         return new MyStructureDataObject (fieldNames, fieldValues);
+    }
+    
+    /**
+     * Map structure fields to setters of Java bean.
+     * 
+     * @param structureDataObject structure data object to map field of
+     * @param bean Java bean to map to setters of
+     * @return names of unused fields as string array
+     */
+    public static String [] mapFields (
+        StructureDataObject structureDataObject,
+        Object bean)
+    {
+        if (structureDataObject == null)
+            throw new IllegalArgumentException (
+                "Structure data object is null");
+        
+        if (bean == null)
+            throw new IllegalArgumentException ("Bean is null");
+        
+        Set <String> unusedFields = 
+            new HashSet <String> (
+                    Arrays.asList (structureDataObject.getFieldNames ()));
+        Method [] methods = bean.getClass ().getMethods ();
+        for (Method method: methods)
+        {
+            StructureField field = method.getAnnotation (StructureField.class);
+            if (field == null)
+                continue;
+            
+            int modifiers = method.getModifiers ();
+            if (Modifier.isStatic (modifiers))
+                throw new IllegalArgumentException (
+                    "Setter is static: " + method);
+            
+            if (Modifier.isAbstract (modifiers))
+                throw new IllegalArgumentException (
+                    "Setter is abstract: " + method);
+            
+            if (!Void.TYPE.equals (method.getReturnType ()))
+                throw new IllegalArgumentException (
+                    "Setter returns value: " + method);
+            
+            String name = field.name ();
+            if (name == null)
+                throw new IllegalArgumentException (
+                    "Field name is null: " + method);
+            
+            if (!structureDataObject.hasField (name))
+            {
+                if (!field.optional ())
+                    throw new IllegalArgumentException (
+                        "No such field: " + name);
+                else continue;
+            }
+            
+            if (!unusedFields.remove (name))
+                throw new IllegalArgumentException (
+                    "Several setters for one field: " + name);
+            
+            DataObject value = structureDataObject.getField (name);
+            callSetter (bean, method, value);
+        }
+        
+        return unusedFields.toArray (new String [unusedFields.size ()]);
+    }
+    
+    private static void callSetter (
+        Object bean, Method setter, DataObject value)
+    {
+        if (bean == null)
+            throw new IllegalArgumentException ("Bean is null");
+        
+        if (setter == null)
+            throw new IllegalArgumentException ("Setter is null");
+        
+        if (value == null)
+            throw new IllegalArgumentException ("Value is null");
+        
+        Class <?> [] parameterTypes = setter.getParameterTypes ();
+        int count = parameterTypes.length;
+        if (count > 1)
+            throw new IllegalArgumentException (
+                "Setter should not more then one parameter: " + setter);
+        
+        Object [] arguments;
+        
+        DataObjectType valueType = value.getType ();
+        
+        if (count == 0)
+        {
+            if (!DataObjectType.NULL.equals (valueType))
+                throw new IllegalArgumentException (
+                    "Null data object expected for setter: " + setter);
+            
+            arguments = new Object [0];
+        }
+        else if (count == 1)
+        {
+            Class <?> parameterType = parameterTypes [0];
+
+            arguments = new Object [] {castDataObject (value, parameterType)};
+        }
+        else throw new IllegalArgumentException (
+            "Setter has too many parameters: " + setter);
+        
+        setter.setAccessible (true);
+        
+        try
+        {
+            setter.invoke (bean, arguments);
+        }
+        catch (IllegalAccessException ex)
+        {
+            throw new IllegalArgumentException (
+                "Cannot access setter: " + setter);
+        }
+        catch (InvocationTargetException ex)
+        {
+            throw new RuntimeException (
+                "Exception in setter: " + setter, ex);
+        }
+    }
+
+    private static Object castDataObject (
+        DataObject dataObject, Class <?> type)
+    {
+        if (dataObject == null)
+            throw new IllegalArgumentException ("Data object is null");
+        
+        if (type == null)
+            throw new IllegalArgumentException ("Type is null");
+        
+        DataObjectType dataObjectType = dataObject.getType ();
+        
+        if (Boolean.TYPE.equals (type))
+        {
+            if (!DataObjectType.BOOLEAN.equals (dataObjectType))
+                throw new IllegalArgumentException (
+                    "Boolean data object expected: " + dataObject);
+            
+            return Boolean.valueOf (
+                ((BooleanDataObject)dataObject).getBoolean ());
+        }
+        else if (Boolean.class.equals (type))
+        {
+            if (DataObjectType.NULL.equals (dataObjectType))
+                return null;
+            else if (DataObjectType.BOOLEAN.equals (dataObjectType))
+                return Boolean.valueOf (
+                    ((BooleanDataObject)dataObject).getBoolean ());
+            else throw new IllegalArgumentException (
+                "Null or boolean data object expected: " + dataObject);
+        }
+        else if (Integer.TYPE.equals (type))
+        {
+            if (!DataObjectType.INTEGER.equals (dataObjectType))
+                throw new IllegalArgumentException (
+                    "Integer data object expected: " + dataObject);
+            
+            return Integer.valueOf (
+                ((IntegerDataObject)dataObject).getInt ());
+        }
+        else if (Integer.class.equals (type))
+        {
+            if (DataObjectType.NULL.equals (dataObjectType))
+                return null;
+            else if (DataObjectType.INTEGER.equals (dataObjectType))
+                return Integer.valueOf (
+                    ((IntegerDataObject)dataObject).getInt ());
+            else throw new IllegalArgumentException (
+                "Null or integer data object expected: " + dataObject);
+        }
+        else if (Long.TYPE.equals (type))
+        {
+            if (!DataObjectType.INTEGER.equals (dataObjectType))
+                throw new IllegalArgumentException (
+                    "Integer data object expected: " + dataObject);
+            
+            return Long.valueOf (
+                ((IntegerDataObject)dataObject).getLong ());
+        }
+        else if (Long.class.equals (type))
+        {
+            if (DataObjectType.NULL.equals (dataObjectType))
+                return null;
+            else if (DataObjectType.INTEGER.equals (dataObjectType))
+                return Long.valueOf (
+                    ((IntegerDataObject)dataObject).getLong ());
+            else throw new IllegalArgumentException (
+                "Null or integer data object expected: " + dataObject);
+        }
+        else if (Float.TYPE.equals (type))
+        {
+            if (!DataObjectType.REAL.equals (dataObjectType))
+                throw new IllegalArgumentException (
+                    "Real data object expected: " + dataObject);
+            
+            return Float.valueOf (
+                ((RealDataObject)dataObject).getFloat ());
+        }
+        else if (Float.class.equals (type))
+        {
+            if (DataObjectType.NULL.equals (dataObjectType))
+                return null;
+            else if (DataObjectType.REAL.equals (dataObjectType))
+                return Float.valueOf (
+                    ((RealDataObject)dataObject).getFloat ());
+            else throw new IllegalArgumentException (
+                "Null or real data object expected: " + dataObject);
+        }
+        else if (Double.TYPE.equals (type))
+        {
+            if (!DataObjectType.REAL.equals (dataObjectType))
+                throw new IllegalArgumentException (
+                    "Real data object expected: " + dataObject);
+            
+            return Double.valueOf (
+                ((RealDataObject)dataObject).getDouble ());
+        }
+        else if (Double.class.equals (type))
+        {
+            if (DataObjectType.NULL.equals (dataObjectType))
+                return null;
+            else if (DataObjectType.REAL.equals (dataObjectType))
+                return Double.valueOf (
+                    ((RealDataObject)dataObject).getDouble ());
+            else throw new IllegalArgumentException (
+                "Null or real data object expected: " + dataObject);
+        }
+        else if (String.class.equals (type))
+        {
+            if (DataObjectType.NULL.equals (dataObjectType))
+                return null;
+            else if (DataObjectType.STRING.equals (dataObjectType))
+                return ((StringDataObject)dataObject).getString ();
+            else throw new IllegalArgumentException (
+                "Null or string data object expected: " + dataObject);
+        }
+        else if (byte [].class.equals (type))
+        {
+            if (DataObjectType.NULL.equals (dataObjectType))
+                return null;
+            else if (DataObjectType.BINARY.equals (dataObjectType))
+                return ((BinaryDataObject)dataObject).getBytes ();
+            else throw new IllegalArgumentException (
+                "Null or binary data object expected: " + dataObject);
+        }
+        else if (NullDataObject.class.equals (type))
+        {
+            if (DataObjectType.NULL.equals (dataObjectType))
+                return (NullDataObject)dataObject;
+            else throw new IllegalArgumentException (
+                "Null data object expected: " + dataObject);
+        }
+        else if (BooleanDataObject.class.equals (type))
+        {
+            if (DataObjectType.BOOLEAN.equals (dataObjectType))
+                return (BooleanDataObject)dataObject;
+            else throw new IllegalArgumentException (
+                "Boolean data object expected: " + dataObject);
+        }
+        else if (IntegerDataObject.class.equals (type))
+        {
+            if (DataObjectType.INTEGER.equals (dataObjectType))
+                return (IntegerDataObject)dataObject;
+            else throw new IllegalArgumentException (
+                "Integer data object expected: " + dataObject);
+        }
+        else if (RealDataObject.class.equals (type))
+        {
+            if (DataObjectType.REAL.equals (dataObjectType))
+                return (RealDataObject)dataObject;
+            else throw new IllegalArgumentException (
+                "Real data object expected: " + dataObject);
+        }
+        else if (StringDataObject.class.equals (type))
+        {
+            if (DataObjectType.STRING.equals (dataObjectType))
+                return (StringDataObject)dataObject;
+            else throw new IllegalArgumentException (
+                "String data object expected: " + dataObject);
+        }
+        else if (BinaryDataObject.class.equals (type))
+        {
+            if (DataObjectType.BINARY.equals (dataObjectType))
+                return (BinaryDataObject)dataObject;
+            else throw new IllegalArgumentException (
+                "Binary data object expected: " + dataObject);
+        }
+        else if (ListDataObject.class.equals (type))
+        {
+            if (DataObjectType.LIST.equals (dataObjectType))
+                return (ListDataObject)dataObject;
+            else throw new IllegalArgumentException (
+                "List data object expected: " + dataObject);
+        }
+        else if (StructureDataObject.class.equals (type))
+        {
+            if (DataObjectType.STRUCTURE.equals (dataObjectType))
+                return (StructureDataObject)dataObject;
+            else throw new IllegalArgumentException (
+                "Structure data object expected: " + dataObject);
+        }
+        else if (DataObject.class.equals (type))
+        {
+            return dataObject;
+        }
+        else if (type.isArray ())
+        {
+            if (!DataObjectType.LIST.equals (dataObjectType))
+                throw new IllegalArgumentException (
+                    "List data object expected: " + dataObject);
+            
+            ListDataObject list = (ListDataObject)dataObject;
+            
+            int size = list.getSize ();
+            Class <?> componentType = type.getComponentType ();
+            Object result = Array.newInstance (componentType, size);
+            for (int i = 0; i < size; i++)
+                Array.set (
+                    result, i, castDataObject (
+                        list.getElementAt (i), componentType));
+            
+            return result;
+        }
+        else throw new IllegalArgumentException (
+            "Cannot cast data object to " + type + ": " + dataObject);
     }
     
     private static class StringFormattingVisitor 

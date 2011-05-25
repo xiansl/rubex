@@ -1,10 +1,10 @@
 package com.googlecode.rubex.server;
 
 import com.googlecode.rubex.data.DataObject;
-import com.googlecode.rubex.protocol.Connection;
-import com.googlecode.rubex.protocol.event.ConnectionEvent;
-import com.googlecode.rubex.protocol.event.MessageEvent;
-import com.googlecode.rubex.protocol.event.MessageListener;
+import com.googlecode.rubex.net.Connection;
+import com.googlecode.rubex.net.event.ConnectionEvent;
+import com.googlecode.rubex.net.event.MessageEvent;
+import com.googlecode.rubex.net.event.MessageListener;
 
 public class RubexServerSession
 {
@@ -44,5 +44,9 @@ public class RubexServerSession
         {
             // Do nothing
         }
+    }
+    
+    private static class IncomingMessage
+    {
     }
 }

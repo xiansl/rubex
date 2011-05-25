@@ -1,8 +1,8 @@
-package com.googlecode.rubex.protocol.event;
+package com.googlecode.rubex.net.event;
 
 import java.util.EventObject;
 
-import com.googlecode.rubex.protocol.Connection;
+import com.googlecode.rubex.net.Connection;
 
 /**
  * Contains details about connection-related event.

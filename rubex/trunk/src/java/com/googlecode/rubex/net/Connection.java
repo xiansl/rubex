@@ -1,6 +1,6 @@
-package com.googlecode.rubex.protocol;
+package com.googlecode.rubex.net;
 
-import com.googlecode.rubex.protocol.event.MessageListener;
+import com.googlecode.rubex.net.event.MessageListener;
 
 /**
  * Network connection that allows to send and receive messages.

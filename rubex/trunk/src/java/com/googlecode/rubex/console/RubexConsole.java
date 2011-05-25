@@ -6,11 +6,11 @@ import java.net.Socket;
 
 import com.googlecode.rubex.data.DataObject;
 import com.googlecode.rubex.data.DataObjectUtils;
-import com.googlecode.rubex.protocol.SimpleDataConnection;
-import com.googlecode.rubex.protocol.SimpleSocketConnection;
-import com.googlecode.rubex.protocol.event.ConnectionEvent;
-import com.googlecode.rubex.protocol.event.MessageEvent;
-import com.googlecode.rubex.protocol.event.MessageListener;
+import com.googlecode.rubex.net.SimpleDataConnection;
+import com.googlecode.rubex.net.SimpleSocketConnection;
+import com.googlecode.rubex.net.event.ConnectionEvent;
+import com.googlecode.rubex.net.event.MessageEvent;
+import com.googlecode.rubex.net.event.MessageListener;
 
 public class RubexConsole
 {

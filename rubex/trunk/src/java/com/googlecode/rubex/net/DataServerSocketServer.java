@@ -1,4 +1,4 @@
-package com.googlecode.rubex.protocol;
+package com.googlecode.rubex.net;
 
 import java.net.ServerSocket;
 import java.net.Socket;

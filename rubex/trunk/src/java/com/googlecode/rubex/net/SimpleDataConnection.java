@@ -1,4 +1,4 @@
-package com.googlecode.rubex.protocol;
+package com.googlecode.rubex.net;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -8,9 +8,9 @@ import java.util.logging.Logger;
 import com.googlecode.rubex.data.DataObject;
 import com.googlecode.rubex.data.DataObjectUtils;
 import com.googlecode.rubex.message.Message;
-import com.googlecode.rubex.protocol.event.ConnectionEvent;
-import com.googlecode.rubex.protocol.event.MessageEvent;
-import com.googlecode.rubex.protocol.event.MessageListener;
+import com.googlecode.rubex.net.event.ConnectionEvent;
+import com.googlecode.rubex.net.event.MessageEvent;
+import com.googlecode.rubex.net.event.MessageListener;
 
 /**
  * Simple implementation of {@link Connection <DataObject>} interface based on 
