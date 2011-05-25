@@ -2,6 +2,8 @@ package com.googlecode.rubex.net;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.googlecode.rubex.net.event.ConnectionEvent;
 import com.googlecode.rubex.net.event.MessageEvent;
@@ -17,6 +19,9 @@ import com.googlecode.rubex.net.event.MessageListener;
 public abstract class AbstractConnection <MessageType> 
     implements Connection <MessageType>
 {
+    private final static Logger logger =
+        Logger.getLogger (AbstractConnection.class.getName ());
+    
     private final List <MessageListener <? super MessageType>> 
         messageListeners = 
             new ArrayList <MessageListener <? super MessageType>> ();
@@ -73,7 +78,16 @@ public abstract class AbstractConnection <MessageType>
             if (event == null)
                 event = new MessageEvent <MessageType> (this, message);
             
-            listener.onMessage (event);
+            try
+            {
+                listener.onMessage (event);
+            }
+            catch (Exception ex)
+            {
+                if (logger.isLoggable (Level.SEVERE))
+                    logger.log (
+                        Level.SEVERE, "Exception in message listener", ex);
+            }
         }
     }
     
@@ -89,7 +103,16 @@ public abstract class AbstractConnection <MessageType>
             if (event == null)
                 event = new ConnectionEvent <MessageType> (this, this);
             
-            listener.onDisconnect (event);
+            try
+            {
+                listener.onDisconnect (event);
+            }
+            catch (Exception ex)
+            {
+                if (logger.isLoggable (Level.SEVERE))
+                    logger.log (
+                        Level.SEVERE, "Exception in message listener", ex);
+            }
         }
     }
 }
