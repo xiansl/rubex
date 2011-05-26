@@ -2,11 +2,11 @@ package com.googlecode.rubex.server;
 
 import java.net.ServerSocket;
 
-import com.googlecode.rubex.data.DataObject;
 import com.googlecode.rubex.net.Connection;
-import com.googlecode.rubex.net.DataServerSocketServer;
+import com.googlecode.rubex.net.ProtocolServerSocketServer;
 import com.googlecode.rubex.net.event.ConnectionEvent;
 import com.googlecode.rubex.net.event.ConnectionListener;
+import com.googlecode.rubex.protocol.ProtocolMessage;
 
 public class RubexServer
 {
@@ -17,21 +17,21 @@ public class RubexServer
     
     public void run () throws Exception
     {
-        DataServerSocketServer server =
-            new DataServerSocketServer (new ServerSocket (1234));
+        ProtocolServerSocketServer server =
+            new ProtocolServerSocketServer (new ServerSocket (1234));
         
         server.addConnectionListener (new MyConnectionListener ());
         server.start ();
     }
     
     private class MyConnectionListener 
-        implements ConnectionListener <DataObject>
+        implements ConnectionListener <ProtocolMessage>
     {
         @Override
         public void onNewConnection (
-            ConnectionEvent <DataObject> event)
+            ConnectionEvent <ProtocolMessage> event)
         {
-            Connection <DataObject> connection = event.getConnection ();
+            Connection <ProtocolMessage> connection = event.getConnection ();
             
             new RubexServerSession (connection);
         }

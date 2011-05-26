@@ -1,7 +1,6 @@
 package com.googlecode.rubex.net;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.ref.WeakReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,8 +38,7 @@ public class SimpleDataConnection
         
         this.connection = connection;
         
-        connection.addMessageListener (
-            new MyMessageListener (this));
+        connection.addMessageListener (new MyMessageListener ());
     }
 
     /**
@@ -124,34 +122,19 @@ public class SimpleDataConnection
         fireOnDisconnect ();
     }
     
-    private static class MyMessageListener 
+    private class MyMessageListener 
         implements MessageListener <Message>
     {
-        private final WeakReference <SimpleDataConnection> connection;
-
-        public MyMessageListener (SimpleDataConnection connection)
-        {
-            if (connection == null)
-                throw new IllegalArgumentException ("Connection is null");
-            
-            this.connection = 
-                new WeakReference <SimpleDataConnection> (connection);
-        }
-        
         @Override
         public void onMessage (MessageEvent <? extends Message> event)
         {
-            SimpleDataConnection connection = this.connection.get ();
-            if (connection != null)
-                connection.onMessage (event);
+            SimpleDataConnection.this.onMessage (event);
         }
 
         @Override
         public void onDisconnect (ConnectionEvent <? extends Message> event)
         {
-            SimpleDataConnection connection = this.connection.get ();
-            if (connection != null)
-                connection.onDisconnect (event);
+            SimpleDataConnection.this.onDisconnect (event);
         }
     }
     
