@@ -18,7 +18,7 @@ import com.googlecode.rubex.net.Connection;
 import com.googlecode.rubex.net.event.ConnectionEvent;
 import com.googlecode.rubex.net.event.MessageEvent;
 import com.googlecode.rubex.net.event.MessageListener;
-import com.googlecode.rubex.protocol.MessageType;
+import com.googlecode.rubex.protocol.ProtocolMessageType;
 
 public class RubexServerSession
 {
@@ -54,7 +54,7 @@ public class RubexServerSession
                     "Unexpected fields in incoming message: " + 
                         Arrays.asList (unusedFields));
             
-            MessageType messageType = incomingMessage.messageType; 
+            ProtocolMessageType messageType = incomingMessage.messageType; 
             
             switch (messageType)
             {
@@ -99,7 +99,7 @@ public class RubexServerSession
             
             connection.sendMessage (
                 new StructureDataObjectBuilder ().
-                addStringField ("messageType", MessageType.REJECT.name ()).
+                addStringField ("messageType", ProtocolMessageType.REJECT.name ()).
                 addField ("messageBody",
                     new StructureDataObjectBuilder ().
                     addStringField ("rejectReason", ex.getMessage ()).
@@ -157,7 +157,7 @@ public class RubexServerSession
     @SuppressWarnings ("unused")
     private static class IncomingMessage
     {
-        public MessageType messageType;
+        public ProtocolMessageType messageType;
         public DataObject messageBody;
         
         @StructureField (name = "messageType")
@@ -168,7 +168,7 @@ public class RubexServerSession
             
             try
             {
-                this.messageType = MessageType.valueOf (messageType);
+                this.messageType = ProtocolMessageType.valueOf (messageType);
             }
             catch (IllegalArgumentException ex)
             {
