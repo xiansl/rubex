@@ -41,6 +41,13 @@ public class ProtocolUtils
         return message.accept (MARSHALLING_VISITOR);
     }
     
+    /**
+     * Unmarshal business-level protocol message from data object.
+     * 
+     * @param dataObject data object to unmarshal business-level protocol 
+     *        message from
+     * @return unmarshalled business-level protocol object
+     */
     public static ProtocolMessage unmarshal (
         ProtocolMessageType messageType, DataObject dataObject)
     {
@@ -485,15 +492,15 @@ public class ProtocolUtils
         extends AbstractNewOrderProtocolMessage
     {
         private long orderID;
-        private long account;
+        private long account = 0;
         private String symbol;
         private OrderSide side;
         private long quantity;
         private OrderType orderType;
-        private OrderTimeInForce timeInForce;
-        private long limitPrice;
-        private long stopPrice;
-        private long visibleQuantity;
+        private OrderTimeInForce timeInForce = null;
+        private long limitPrice = 0;
+        private long stopPrice = 0;
+        private long visibleQuantity = 0;
 
         @StructureField (name = ORDER_ID)
         public void setOrderID (long orderID)
@@ -504,85 +511,106 @@ public class ProtocolUtils
             this.orderID = orderID;
         }
 
-        @StructureField (name = ACCOUNT)
-        public void setOrderID (long account)
+        @StructureField (name = ACCOUNT, optional = true)
+        public void setAccount (long account)
         {
-            if (orderID <= 0)
-                throw new IllegalArgumentException ("Order ID <= 0");
+            if (account <= 0)
+                throw new IllegalArgumentException ("Account <= 0");
             
-            this.orderID = orderID;
+            this.account = account;
         }
 
         @StructureField (name = SYMBOL)
-        public void setOrderID (String symbol)
+        public void setSymbol (String symbol)
         {
-            if (orderID <= 0)
-                throw new IllegalArgumentException ("Order ID <= 0");
+            if (symbol == null)
+                throw new IllegalArgumentException ("Symbol is null");
             
-            this.orderID = orderID;
+            this.symbol = symbol;
         }
 
         @StructureField (name = SIDE)
-        public void setOrderID (String side)
+        public void setSide (String side)
         {
-            if (orderID <= 0)
-                throw new IllegalArgumentException ("Order ID <= 0");
+            if (side == null)
+                throw new IllegalArgumentException ("Side is null");
             
-            this.orderID = orderID;
+            try
+            {
+                this.side = OrderSide.valueOf (side);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException ("Unknown side: " + side);
+            }
         }
 
         @StructureField (name = QUANTITY)
-        public void setOrderID (long quantity)
+        public void setQualtity (long quantity)
         {
-            if (orderID <= 0)
-                throw new IllegalArgumentException ("Order ID <= 0");
+            if (quantity <= 0)
+                throw new IllegalArgumentException ("Quantity <= 0");
             
-            this.orderID = orderID;
+            this.quantity = quantity;
         }
 
         @StructureField (name = ORDER_TYPE)
-        public void setOrderID (String orderType)
+        public void setOrderType (String orderType)
         {
-            if (orderID <= 0)
-                throw new IllegalArgumentException ("Order ID <= 0");
+            if (orderType == null)
+                throw new IllegalArgumentException ("Order type is null");
             
-            this.orderID = orderID;
+            try
+            {
+                this.orderType = OrderType.valueOf (orderType);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException ("Unknown order type: " + orderType);
+            }
         }
 
-        @StructureField (name = TIME_IN_FORCE)
-        public void setOrderID (long orderID)
+        @StructureField (name = TIME_IN_FORCE, optional = true)
+        public void setOrderID (String timeInForce)
         {
-            if (orderID <= 0)
-                throw new IllegalArgumentException ("Order ID <= 0");
+            if (timeInForce == null)
+                throw new IllegalArgumentException ("Time in force is null");
             
-            this.orderID = orderID;
+            try
+            {
+                this.timeInForce = OrderTimeInForce.valueOf (timeInForce);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException ("Unknown time in force: " + timeInForce);
+            }
         }
 
-        @StructureField (name = lIMIT_PRICE)
-        public void setOrderID (long orderID)
+        @StructureField (name = lIMIT_PRICE, optional = true)
+        public void setLimitPrice (long limitPrice)
         {
-            if (orderID <= 0)
-                throw new IllegalArgumentException ("Order ID <= 0");
+            if (limitPrice <= 0)
+                throw new IllegalArgumentException ("Limit price <= 0");
             
-            this.orderID = orderID;
+            this.limitPrice = limitPrice;
         }
 
-        @StructureField (name = STOP_PRICE)
-        public void setOrderID (long orderID)
+        @StructureField (name = STOP_PRICE, optional = true)
+        public void setStopPrice (long stopPrice)
         {
-            if (orderID <= 0)
-                throw new IllegalArgumentException ("Order ID <= 0");
+            if (stopPrice <= 0)
+                throw new IllegalArgumentException ("Stop price <= 0");
             
-            this.orderID = orderID;
+            this.stopPrice = stopPrice;
         }
 
-        @StructureField (name = VISIBLE_QUANTITY)
-        public void setOrderID (long orderID)
+        @StructureField (name = VISIBLE_QUANTITY, optional = true)
+        public void setVisibleQuantity (long visibleQuantity)
         {
-            if (orderID <= 0)
-                throw new IllegalArgumentException ("Order ID <= 0");
+            if (visibleQuantity <= 0)
+                throw new IllegalArgumentException ("Visible quantity <= 0");
             
-            this.orderID = orderID;
+            this.visibleQuantity = visibleQuantity;
         }
         
         @Override
@@ -643,6 +671,176 @@ public class ProtocolUtils
         public long getVisibleQuantity ()
         {
             return visibleQuantity;
+        }
+    }
+    
+    @SuppressWarnings ("unused")
+    private static class MyReplaceOrder 
+        extends AbstractReplaceOrderProtocolMessage
+    {
+        private long originalOrderID;
+        private long orderID;
+        private long quantity;
+        private OrderType orderType;
+        private OrderTimeInForce timeInForce = null;
+        private long limitPrice = 0;
+        private long stopPrice = 0;
+        private long visibleQuantity = 0;
+
+        @StructureField (name = ORIGINAL_ORDER_ID)
+        public void setOriginalOrderID (long originalOrderID)
+        {
+            if (originalOrderID <= 0)
+                throw new IllegalArgumentException ("Original order ID <= 0");
+            
+            this.originalOrderID = originalOrderID;
+        }
+
+        @StructureField (name = ORDER_ID)
+        public void setOrderID (long orderID)
+        {
+            if (orderID <= 0)
+                throw new IllegalArgumentException ("Order ID <= 0");
+            
+            this.orderID = orderID;
+        }
+
+        @StructureField (name = QUANTITY)
+        public void setQualtity (long quantity)
+        {
+            if (quantity <= 0)
+                throw new IllegalArgumentException ("Quantity <= 0");
+            
+            this.quantity = quantity;
+        }
+
+        @StructureField (name = ORDER_TYPE)
+        public void setOrderType (String orderType)
+        {
+            if (orderType == null)
+                throw new IllegalArgumentException ("Order type is null");
+            
+            try
+            {
+                this.orderType = OrderType.valueOf (orderType);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException ("Unknown order type: " + orderType);
+            }
+        }
+
+        @StructureField (name = TIME_IN_FORCE, optional = true)
+        public void setOrderID (String timeInForce)
+        {
+            if (timeInForce == null)
+                throw new IllegalArgumentException ("Time in force is null");
+            
+            try
+            {
+                this.timeInForce = OrderTimeInForce.valueOf (timeInForce);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException ("Unknown time in force: " + timeInForce);
+            }
+        }
+
+        @StructureField (name = lIMIT_PRICE, optional = true)
+        public void setLimitPrice (long limitPrice)
+        {
+            if (limitPrice <= 0)
+                throw new IllegalArgumentException ("Limit price <= 0");
+            
+            this.limitPrice = limitPrice;
+        }
+
+        @StructureField (name = STOP_PRICE, optional = true)
+        public void setStopPrice (long stopPrice)
+        {
+            if (stopPrice <= 0)
+                throw new IllegalArgumentException ("Stop price <= 0");
+            
+            this.stopPrice = stopPrice;
+        }
+
+        @StructureField (name = VISIBLE_QUANTITY, optional = true)
+        public void setVisibleQuantity (long visibleQuantity)
+        {
+            if (visibleQuantity <= 0)
+                throw new IllegalArgumentException ("Visible quantity <= 0");
+            
+            this.visibleQuantity = visibleQuantity;
+        }
+        
+        @Override
+        public long getOriginalOrderID ()
+        {
+            return originalOrderID;
+        }
+        
+        @Override
+        public long getOrderID ()
+        {
+            return orderID;
+        }
+
+        @Override
+        public long getQuantity ()
+        {
+            return quantity;
+        }
+
+        @Override
+        public OrderType getOrderType ()
+        {
+            return orderType;
+        }
+
+        @Override
+        public OrderTimeInForce getTimeInForce ()
+        {
+            return timeInForce;
+        }
+
+        @Override
+        public long getLimitPrice ()
+        {
+            return limitPrice;
+        }
+
+        @Override
+        public long getStopPrice ()
+        {
+            return stopPrice;
+        }
+
+        @Override
+        public long getVisibleQuantity ()
+        {
+            return visibleQuantity;
+        }
+    }
+    
+    @SuppressWarnings ("unused")
+    private static class MyCancelOrder 
+        extends AbstractCancelOrderProtocolMessage
+    {
+        private long orderID;
+
+        @StructureField (name = ORDER_ID)
+        public void setOrderID (long orderID)
+        {
+            if (orderID <= 0)
+                throw new IllegalArgumentException ("Order ID <= 0");
+            
+            this.orderID = orderID;
+        }
+        
+        @Override
+        public long getOrderID ()
+        {
+            return orderID;
         }
     }
 }

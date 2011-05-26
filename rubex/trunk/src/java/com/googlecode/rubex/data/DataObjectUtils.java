@@ -68,12 +68,12 @@ public class DataObjectUtils
         catch (ParseException ex)
         {
             throw new IllegalArgumentException (
-                "Invalid string representation of data object");
+                "Invalid string representation of data object", ex);
         }
         catch (TokenMgrError ex)
         {
             throw new IllegalArgumentException (
-            "Invalid string representation of data object");
+                "Invalid string representation of data object", ex);
         }
     }
     
