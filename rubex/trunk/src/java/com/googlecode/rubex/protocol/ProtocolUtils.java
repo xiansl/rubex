@@ -1,5 +1,7 @@
 package com.googlecode.rubex.protocol;
 
+import java.util.Arrays;
+
 import com.googlecode.rubex.data.DataObject;
 import com.googlecode.rubex.data.DataObjectUtils;
 import com.googlecode.rubex.data.StructureDataObjectBuilder;
@@ -57,29 +59,163 @@ public class ProtocolUtils
         if (dataObject == null)
             throw new IllegalArgumentException ("Data object is null");
         
-        ProtocolMessage result;
-        
         switch (messageType)
         {
         case REJECT:
-            result = new MyReject ();
-            break;
+            return new MyReject (dataObject);
         case NEW_ORDER:
-            result = new MyNewOrder ();
-            break;
+            return new MyNewOrder (dataObject);
         case REPLACE_ORDER:
-            result = new MyReplaceOrder ();
-            break;
+            return new MyReplaceOrder (dataObject);
         case CANCEL_ORDER:
-            result = new MyCancelOrder ();
-            break;
+            return new MyCancelOrder (dataObject);
         default:
-            throw new IllegalArgumentException ("Unknown message type: " + messageType);
+            throw new IllegalArgumentException (
+                "Unknown message type: " + messageType);
         }
+    }
+    
+    /**
+     * Create reject message with given reject reason and rejected message.
+     * 
+     * @param rejectReason reject reason
+     * @param rejectedMessage message that was rejected
+     * @return reject message
+     */
+    public static RejectProtocolMessage createReject (
+        String rejectReason,
+        DataObject rejectedMessage)
+    {
+        if (rejectReason == null)
+            throw new IllegalArgumentException ("Reject reason is null");
         
-        DataObjectUtils.mapFields (dataObject, result);
+        if (rejectedMessage == null)
+            throw new IllegalArgumentException ("Rejected message is null");
         
-        return result.accept (VALIDATING_VISITOR);
+        return new MyReject (rejectReason, rejectedMessage);
+    }
+
+    /**
+     * Create new order message with given order ID, account, symbol, side
+     * quantity, order type, time in force, limit price, stop price and
+     * visible quantity.
+     * 
+     * @param orderID order ID
+     * @param account account or 0 for default account
+     * @param symbol symbol
+     * @param side order side
+     * @param quantity order quantity in quantity units
+     * @param orderType order type
+     * @param timeInForce time in force or <code>null</code> if there is no time 
+     *        in force
+     * @param limitPrice limit price in price units or 0 if there is no limit 
+     *        price
+     * @param stopPrice stop price in price units or 0 if there is no stop 
+     *        price
+     * @param visibleQuantity visible quantity in quantity units or 0 if there 
+     *        is no visible quantity
+     * @return new order message
+     */
+    public static NewOrderProtocolMessage createNewOrder (
+        long orderID, long account, String symbol,
+        OrderSide side, long quantity, OrderType orderType,
+        OrderTimeInForce timeInForce, long limitPrice, long stopPrice,
+        long visibleQuantity)
+    {
+        if (orderID <= 0)
+            throw new IllegalArgumentException ("Order ID <= 0");
+        
+        if (account < 0)
+            throw new IllegalArgumentException ("Account < 0");
+        
+        if (symbol == null)
+            throw new IllegalArgumentException ("Symbol is null");
+        
+        if (side == null)
+            throw new IllegalArgumentException ("Side is null");
+        
+        if (quantity <= 0)
+            throw new IllegalArgumentException ("Quantity <= 0");
+        
+        if (orderType == null)
+            throw new IllegalArgumentException ("Order type is null");
+                
+        if (limitPrice < 0)
+            throw new IllegalArgumentException ("Limit price < 0");
+        
+        if (stopPrice < 0)
+            throw new IllegalArgumentException ("Stop price < 0");
+        
+        if (visibleQuantity < 0)
+            throw new IllegalArgumentException ("Visible quantity < 0");
+            
+        return new MyNewOrder (
+            orderID, account, symbol, side, quantity, orderType, timeInForce, 
+            limitPrice, stopPrice, visibleQuantity);
+    }
+    
+    /**
+     * Create replace order message with given original order ID, order ID, 
+     * account, symbol, side quantity, order type, time in force, limit price, 
+     * stop price and visible quantity.
+     * 
+     * @param originalOrderID original order ID
+     * @param orderID order ID
+     * @param quantity order quantity in quantity units
+     * @param orderType order type
+     * @param timeInForce time in force or <code>null</code> if there is no time 
+     *        in force
+     * @param limitPrice limit price in price units or 0 if there is no limit 
+     *        price
+     * @param stopPrice stop price in price units or 0 if there is no stop 
+     *        price
+     * @param visibleQuantity visible quantity in quantity units or 0 if there 
+     *        is no visible quantity
+     * @return replace order message
+     */
+    public static ReplaceOrderProtocolMessage createReplaceOrder (
+        long originalOrderID, long orderID, 
+        long quantity, OrderType orderType, OrderTimeInForce timeInForce, 
+        long limitPrice, long stopPrice, long visibleQuantity)
+    {
+        if (originalOrderID <= 0)
+            throw new IllegalArgumentException ("Original order ID <= 0");
+        
+        if (orderID <= 0)
+            throw new IllegalArgumentException ("Order ID <= 0");
+        
+        if (quantity <= 0)
+            throw new IllegalArgumentException ("Quantity <= 0");
+        
+        if (orderType == null)
+            throw new IllegalArgumentException ("Order type is null");
+                
+        if (limitPrice < 0)
+            throw new IllegalArgumentException ("Limit price < 0");
+        
+        if (stopPrice < 0)
+            throw new IllegalArgumentException ("Stop price < 0");
+        
+        if (visibleQuantity < 0)
+            throw new IllegalArgumentException ("Visible quantity < 0");
+        
+        return new MyReplaceOrder (
+            originalOrderID, orderID, quantity, orderType, timeInForce, 
+            limitPrice, stopPrice, visibleQuantity);
+    }
+    
+    /**
+     * Create cancel order message with given orderID.
+     * 
+     * @param orderID order ID
+     * @return cancel order message
+     */
+    public static CancelOrderProtocolMessage createCancel (long orderID)
+    {
+        if (orderID <= 0)
+            throw new IllegalArgumentException ("Order ID <= 0");
+        
+        return new MyCancelOrder (orderID);
     }
     
     private static class MarshallingVisitor 
@@ -456,6 +592,33 @@ public class ProtocolUtils
         private String rejectReason;
         private DataObject rejectedMessage;
         
+        public MyReject (DataObject dataObject)
+        {
+            if (dataObject == null)
+                throw new IllegalArgumentException ("Data object is null");
+            
+            String [] unusedFields = DataObjectUtils.mapFields (dataObject, this);
+            
+            if (unusedFields.length > 0)
+                throw new IllegalArgumentException ("Unknown fields: " + Arrays.asList (unusedFields));
+            
+            accept (VALIDATING_VISITOR);
+        }
+        
+        public MyReject (String rejectReason, DataObject rejectedMessage)
+        {
+            if (rejectReason == null)
+                throw new IllegalArgumentException ("Reject reason is null");
+            
+            if (rejectedMessage == null)
+                throw new IllegalArgumentException ("Rejected message is null");
+            
+            this.rejectReason = rejectReason;
+            this.rejectedMessage = rejectedMessage;
+            
+            accept (VALIDATING_VISITOR);
+        }
+
         @StructureField (name = REJECT_REASON)
         public void setRejectReason (String rejectReason)
         {
@@ -501,6 +664,65 @@ public class ProtocolUtils
         private long limitPrice = 0;
         private long stopPrice = 0;
         private long visibleQuantity = 0;
+
+        public MyNewOrder (DataObject dataObject)
+        {
+            if (dataObject == null)
+                throw new IllegalArgumentException ("Data object is null");
+            
+            String [] unusedFields = DataObjectUtils.mapFields (dataObject, this);
+            
+            if (unusedFields.length > 0)
+                throw new IllegalArgumentException ("Unknown fields: " + Arrays.asList (unusedFields));
+            
+            accept (VALIDATING_VISITOR);
+        }
+        
+        public MyNewOrder (long orderID, long account, String symbol,
+                OrderSide side, long quantity, OrderType orderType,
+                OrderTimeInForce timeInForce, long limitPrice, long stopPrice,
+                long visibleQuantity)
+        {
+            if (orderID <= 0)
+                throw new IllegalArgumentException ("Order ID <= 0");
+            
+            if (account < 0)
+                throw new IllegalArgumentException ("Account < 0");
+            
+            if (symbol == null)
+                throw new IllegalArgumentException ("Symbol is null");
+            
+            if (side == null)
+                throw new IllegalArgumentException ("Side is null");
+            
+            if (quantity <= 0)
+                throw new IllegalArgumentException ("Quantity <= 0");
+            
+            if (orderType == null)
+                throw new IllegalArgumentException ("Order type is null");
+                    
+            if (limitPrice < 0)
+                throw new IllegalArgumentException ("Limit price < 0");
+            
+            if (stopPrice < 0)
+                throw new IllegalArgumentException ("Stop price < 0");
+            
+            if (visibleQuantity < 0)
+                throw new IllegalArgumentException ("Visible quantity < 0");
+            
+            this.orderID = orderID;
+            this.account = account;
+            this.symbol = symbol;
+            this.side = side;
+            this.quantity = quantity;
+            this.orderType = orderType;
+            this.timeInForce = timeInForce;
+            this.limitPrice = limitPrice;
+            this.stopPrice = stopPrice;
+            this.visibleQuantity = visibleQuantity;
+            
+            accept (VALIDATING_VISITOR);
+        }
 
         @StructureField (name = ORDER_ID)
         public void setOrderID (long orderID)
@@ -687,6 +909,56 @@ public class ProtocolUtils
         private long stopPrice = 0;
         private long visibleQuantity = 0;
 
+        public MyReplaceOrder (DataObject dataObject)
+        {
+            if (dataObject == null)
+                throw new IllegalArgumentException ("Data object is null");
+            
+            String [] unusedFields = DataObjectUtils.mapFields (dataObject, this);
+            
+            if (unusedFields.length > 0)
+                throw new IllegalArgumentException ("Unknown fields: " + Arrays.asList (unusedFields));
+            
+            accept (VALIDATING_VISITOR);
+        }
+        
+        public MyReplaceOrder (long originalOrderID, long orderID, 
+            long quantity, OrderType orderType, OrderTimeInForce timeInForce, 
+            long limitPrice, long stopPrice, long visibleQuantity)
+        {
+            if (originalOrderID <= 0)
+                throw new IllegalArgumentException ("Original order ID <= 0");
+            
+            if (orderID <= 0)
+                throw new IllegalArgumentException ("Order ID <= 0");
+            
+            if (quantity <= 0)
+                throw new IllegalArgumentException ("Quantity <= 0");
+            
+            if (orderType == null)
+                throw new IllegalArgumentException ("Order type is null");
+                    
+            if (limitPrice < 0)
+                throw new IllegalArgumentException ("Limit price < 0");
+            
+            if (stopPrice < 0)
+                throw new IllegalArgumentException ("Stop price < 0");
+            
+            if (visibleQuantity < 0)
+                throw new IllegalArgumentException ("Visible quantity < 0");
+            
+            this.originalOrderID = originalOrderID;
+            this.orderID = orderID;
+            this.quantity = quantity;
+            this.orderType = orderType;
+            this.timeInForce = timeInForce;
+            this.limitPrice = limitPrice;
+            this.stopPrice = stopPrice;
+            this.visibleQuantity = visibleQuantity;
+            
+            accept (VALIDATING_VISITOR);
+        }
+        
         @StructureField (name = ORIGINAL_ORDER_ID)
         public void setOriginalOrderID (long originalOrderID)
         {
@@ -828,6 +1100,29 @@ public class ProtocolUtils
     {
         private long orderID;
 
+        public MyCancelOrder (DataObject dataObject)
+        {
+            if (dataObject == null)
+                throw new IllegalArgumentException ("Data object is null");
+            
+            String [] unusedFields = DataObjectUtils.mapFields (dataObject, this);
+            
+            if (unusedFields.length > 0)
+                throw new IllegalArgumentException ("Unknown fields: " + Arrays.asList (unusedFields));
+            
+            accept (VALIDATING_VISITOR);
+        }
+        
+        public MyCancelOrder (long orderID)
+        {
+            if (orderID <= 0)
+                throw new IllegalArgumentException ("Order ID <= 0");
+            
+            this.orderID = orderID;
+            
+            accept (VALIDATING_VISITOR);
+        }
+        
         @StructureField (name = ORDER_ID)
         public void setOrderID (long orderID)
         {
