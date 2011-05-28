@@ -1,5 +1,7 @@
 package com.googlecode.rubex.exchange;
 
+import junk.OrderBookWindow;
+
 import com.googlecode.rubex.marketdata.MarketDataTracker;
 import com.googlecode.rubex.marketdata.SimpleOrderBookMarketDataTracker;
 import com.googlecode.rubex.orderbook.OrderBook;
@@ -27,6 +29,8 @@ public class SimpleExchange implements Exchange
         SimpleOrderBookMarketDataTracker marketDataTracker = new SimpleOrderBookMarketDataTracker ();
         orderBook.addOrderBookListener (marketDataTracker);
         this.marketDataTracker = marketDataTracker;
+        
+        orderBook.addOrderBookListener (new OrderBookWindow ());
     }
     
     /**
@@ -270,7 +274,7 @@ public class SimpleExchange implements Exchange
         {
             try
             {
-                entryHandler = orderBook.placeEntry (timestamp, convertSide (getSide ()), getOrderedQuantity (), 0, this, this);
+                entryHandler = orderBook.placeEntry (timestamp, convertSide (getSide ()), getOrderedQuantity (), getLimitPrice (), this, this);
             }
             catch (OrderBookException ex)
             {
