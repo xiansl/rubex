@@ -9,6 +9,7 @@ import com.googlecode.rubex.data.StructureField;
 import com.googlecode.rubex.exchange.OrderSide;
 import com.googlecode.rubex.exchange.OrderTimeInForce;
 import com.googlecode.rubex.exchange.OrderType;
+import com.googlecode.rubex.party.PartyOrderState;
 
 /**
  * Contains various method useful for work with business-level protocol 
@@ -69,6 +70,8 @@ public class ProtocolUtils
             return new MyReplaceOrder (dataObject);
         case CANCEL_ORDER:
             return new MyCancelOrder (dataObject);
+        case ORDER_STATUS:
+            return new MyOrderStatus (dataObject);
         default:
             throw new IllegalArgumentException (
                 "Unknown message type: " + messageType);
@@ -218,6 +221,63 @@ public class ProtocolUtils
         return new MyCancelOrder (orderID);
     }
     
+    /**
+     * Create order status message with given order ID, order state, account,
+     * symbol, side, quantity, filled quantity, filled value, order type,
+     * time in force, limit price, stop price and visible quantity.
+     * 
+     * @param orderID order ID
+     * @return cancel order message
+     */
+    public static OrderStatusProtocolMessage createOrderStatus (
+        long orderID, PartyOrderState orderState, 
+        long account, String symbol,
+        OrderSide side, long quantity, long filledQuantity, long filledValue,
+        OrderType orderType, OrderTimeInForce timeInForce, long limitPrice, 
+        long stopPrice, long visibleQuantity)
+    {
+        if (orderID <= 0)
+            throw new IllegalArgumentException ("Order ID <= 0");
+        
+        if (orderState == null)
+            throw new IllegalArgumentException ("Order state is null");
+        
+        if (account < 0)
+            throw new IllegalArgumentException ("Account < 0");
+        
+        if (symbol == null)
+            throw new IllegalArgumentException ("Symbol is null");
+        
+        if (side == null)
+            throw new IllegalArgumentException ("Side is null");
+        
+        if (quantity <= 0)
+            throw new IllegalArgumentException ("Quantity <= 0");
+        
+        if (filledQuantity < 0)
+            throw new IllegalArgumentException ("Filled quantity < 0");
+        
+        if (filledValue < 0)
+            throw new IllegalArgumentException ("Filled value < 0");
+        
+        if (orderType == null)
+            throw new IllegalArgumentException ("Order type is null");
+                
+        if (limitPrice < 0)
+            throw new IllegalArgumentException ("Limit price < 0");
+        
+        if (stopPrice < 0)
+            throw new IllegalArgumentException ("Stop price < 0");
+        
+        if (visibleQuantity < 0)
+            throw new IllegalArgumentException ("Visible quantity < 0");
+        
+        return new MyOrderStatus (
+            orderID, orderState, account, symbol, side, quantity, 
+            filledQuantity, filledValue, orderType, timeInForce, 
+            limitPrice, stopPrice, visibleQuantity);
+    }
+    
     private static class MarshallingVisitor 
         implements ProtocolMessageVisitor <DataObject>
     {
@@ -353,6 +413,72 @@ public class ProtocolUtils
             builder.addIntegerField (
                 CancelOrderProtocolMessage.ORDER_ID, 
                 cancelOrder.getOrderID ());
+            
+            return builder.getStructureDataObject ();
+        }
+        
+        @Override
+        public DataObject visitOrderStatus (
+            OrderStatusProtocolMessage orderStatus)
+        {
+            if (orderStatus == null)
+                throw new IllegalArgumentException ("New order is null");
+            
+            StructureDataObjectBuilder builder = 
+                new StructureDataObjectBuilder ();
+            
+            builder.addIntegerField (
+                OrderStatusProtocolMessage.ORDER_ID, 
+                orderStatus.getOrderID ());
+            
+            builder.addStringField (
+                OrderStatusProtocolMessage.ORDER_STATE,
+                orderStatus.getOrderState ().name ());
+            
+            long account = orderStatus.getAccount ();
+            if (account != 0)
+                builder.addIntegerField (
+                    OrderStatusProtocolMessage.ACCOUNT, account);
+            
+            builder.addStringField (
+                OrderStatusProtocolMessage.SYMBOL, orderStatus.getSymbol ());
+            builder.addStringField (
+                OrderStatusProtocolMessage.SIDE, 
+                orderStatus.getSide ().name ());
+            builder.addIntegerField (
+                OrderStatusProtocolMessage.QUANTITY, 
+                orderStatus.getQuantity ());
+            builder.addIntegerField (
+                OrderStatusProtocolMessage.FILLED_QUANTITY, 
+                orderStatus.getFilledQuantity ());
+            builder.addIntegerField (
+                OrderStatusProtocolMessage.FILLED_VALUE, 
+                orderStatus.getFilledValue ());
+            builder.addStringField (
+                OrderStatusProtocolMessage.ORDER_TYPE, 
+                orderStatus.getOrderType ().name ());
+            
+            OrderTimeInForce timeInforce = orderStatus.getTimeInForce ();
+            if (timeInforce != null)
+                builder.addStringField (
+                    OrderStatusProtocolMessage.TIME_IN_FORCE, 
+                    timeInforce.name ());
+            
+            long limitPrice = orderStatus.getLimitPrice ();
+            if (limitPrice != 0)
+                builder.addIntegerField (
+                    OrderStatusProtocolMessage.lIMIT_PRICE, limitPrice);
+            
+            long stopPrice = orderStatus.getStopPrice ();
+            if (stopPrice != 0)
+                builder.addIntegerField (
+                    OrderStatusProtocolMessage.STOP_PRICE, stopPrice);
+            
+            long visibleQuantity = orderStatus.getVisibleQuantity ();
+            if (visibleQuantity != 0)
+                builder.addIntegerField (
+                    OrderStatusProtocolMessage.VISIBLE_QUANTITY, 
+                    visibleQuantity);
             
             return builder.getStructureDataObject ();
         }
@@ -584,6 +710,112 @@ public class ProtocolUtils
         {
             return cancelOrder;
         }
+        
+        @Override
+        public ProtocolMessage visitOrderStatus (
+            OrderStatusProtocolMessage orderStatus)
+        {
+            OrderType type = orderStatus.getOrderType ();
+            
+            switch (type)
+            {
+            case MARKET:
+                if (orderStatus.getTimeInForce () != null)
+                    throw new IllegalArgumentException (
+                        "Time in force is set for market order");
+                
+                if (orderStatus.getLimitPrice () != 0)
+                    throw new IllegalArgumentException (
+                        "Limit price is set for market order");
+                
+                if (orderStatus.getStopPrice () != 0)
+                    throw new IllegalArgumentException (
+                        "Stop price is set for market order");
+                
+                if (orderStatus.getVisibleQuantity () != 0)
+                    throw new IllegalArgumentException (
+                        "Visible quantity is set for market order");
+                
+                break;
+            case LIMIT:
+                if (orderStatus.getTimeInForce () == null)
+                    throw new IllegalArgumentException (
+                        "Time in force is not set for limit order");
+                
+                if (orderStatus.getLimitPrice () == 0)
+                    throw new IllegalArgumentException (
+                        "Limit price is not set for limit order");
+                
+                if (orderStatus.getStopPrice () != 0)
+                    throw new IllegalArgumentException (
+                        "Stop price is set for limit order");
+                
+                if (orderStatus.getVisibleQuantity () != 0)
+                    throw new IllegalArgumentException (
+                        "Visible quantity is set for limit order");
+                
+                break;
+            case STOP:
+                if (orderStatus.getTimeInForce () != null)
+                    throw new IllegalArgumentException (
+                        "Time in force is set for stop order");
+                
+                if (orderStatus.getLimitPrice () != 0)
+                    throw new IllegalArgumentException (
+                        "Limit price is set for stop order");
+                
+                if (orderStatus.getStopPrice () == 0)
+                    throw new IllegalArgumentException (
+                        "Stop price is not set for stop order");
+                
+                if (orderStatus.getVisibleQuantity () != 0)
+                    throw new IllegalArgumentException (
+                        "Visible quantity is set for stop order");
+                
+                break;
+            case STOP_LIMIT:
+                if (orderStatus.getTimeInForce () != null)
+                    throw new IllegalArgumentException (
+                        "Time in force is set for stop limit order");
+                
+                if (orderStatus.getLimitPrice () == 0)
+                    throw new IllegalArgumentException (
+                        "Limit price is not set for stop limit order");
+                
+                if (orderStatus.getStopPrice () == 0)
+                    throw new IllegalArgumentException (
+                        "Stop price is not set for stop limit order");
+                
+                if (orderStatus.getVisibleQuantity () != 0)
+                    throw new IllegalArgumentException (
+                        "Visible quantity is set for stop limit order");
+                
+                break;
+            case ICEBERG:
+                if (orderStatus.getTimeInForce () != null)
+                    throw new IllegalArgumentException (
+                        "Time in force is set for iceberg order");
+                
+                if (orderStatus.getLimitPrice () == 0)
+                    throw new IllegalArgumentException (
+                        "Limit price is not set for iceberg order");
+                
+                if (orderStatus.getStopPrice () != 0)
+                    throw new IllegalArgumentException (
+                        "Stop price is set for iceberg order");
+                
+                if (orderStatus.getVisibleQuantity () == 0)
+                    throw new IllegalArgumentException (
+                        "Visible quantity is not set for iceberg order");
+                
+                break;
+            default:
+                throw new IllegalArgumentException (
+                    "Unknown order type: " + type);
+            }
+            
+            return orderStatus;
+        }
     }
     
     @SuppressWarnings ("unused")
@@ -768,7 +1000,7 @@ public class ProtocolUtils
         }
 
         @StructureField (name = QUANTITY)
-        public void setQualtity (long quantity)
+        public void setQuantity (long quantity)
         {
             if (quantity <= 0)
                 throw new IllegalArgumentException ("Quantity <= 0");
@@ -978,7 +1210,7 @@ public class ProtocolUtils
         }
 
         @StructureField (name = QUANTITY)
-        public void setQualtity (long quantity)
+        public void setQuantity (long quantity)
         {
             if (quantity <= 0)
                 throw new IllegalArgumentException ("Quantity <= 0");
@@ -1136,6 +1368,321 @@ public class ProtocolUtils
         public long getOrderID ()
         {
             return orderID;
+        }
+    }
+    
+    @SuppressWarnings ("unused")
+    private static class MyOrderStatus 
+        extends AbstractOrderStatusProtocolMessage
+    {
+        private long orderID;
+        private PartyOrderState orderState;
+        private long account = 0;
+        private String symbol;
+        private OrderSide side;
+        private long quantity;
+        private long filledQuantity;
+        private long filledValue;
+        private OrderType orderType;
+        private OrderTimeInForce timeInForce = null;
+        private long limitPrice = 0;
+        private long stopPrice = 0;
+        private long visibleQuantity = 0;
+
+        public MyOrderStatus (DataObject dataObject)
+        {
+            if (dataObject == null)
+                throw new IllegalArgumentException ("Data object is null");
+            
+            String [] unusedFields = DataObjectUtils.mapFields (dataObject, this);
+            
+            if (unusedFields.length > 0)
+                throw new IllegalArgumentException ("Unknown fields: " + Arrays.asList (unusedFields));
+            
+            accept (VALIDATING_VISITOR);
+        }
+        
+        public MyOrderStatus (
+            long orderID, PartyOrderState orderState, 
+            long account, String symbol,
+            OrderSide side, long quantity, long filledQuantity, long filledValue,
+            OrderType orderType, OrderTimeInForce timeInForce, long limitPrice, 
+            long stopPrice, long visibleQuantity)
+        {
+            if (orderID <= 0)
+                throw new IllegalArgumentException ("Order ID <= 0");
+            
+            if (orderState == null)
+                throw new IllegalArgumentException ("Order state is null");
+            
+            if (account < 0)
+                throw new IllegalArgumentException ("Account < 0");
+            
+            if (symbol == null)
+                throw new IllegalArgumentException ("Symbol is null");
+            
+            if (side == null)
+                throw new IllegalArgumentException ("Side is null");
+            
+            if (quantity <= 0)
+                throw new IllegalArgumentException ("Quantity <= 0");
+            
+            if (filledQuantity < 0)
+                throw new IllegalArgumentException ("Filled quantity < 0");
+            
+            if (filledValue < 0)
+                throw new IllegalArgumentException ("Filled value < 0");
+            
+            if (orderType == null)
+                throw new IllegalArgumentException ("Order type is null");
+                    
+            if (limitPrice < 0)
+                throw new IllegalArgumentException ("Limit price < 0");
+            
+            if (stopPrice < 0)
+                throw new IllegalArgumentException ("Stop price < 0");
+            
+            if (visibleQuantity < 0)
+                throw new IllegalArgumentException ("Visible quantity < 0");
+            
+            this.orderID = orderID;
+            this.orderState = orderState;
+            this.account = account;
+            this.symbol = symbol;
+            this.side = side;
+            this.quantity = quantity;
+            this.filledQuantity = filledQuantity;
+            this.filledValue = filledValue;
+            this.orderType = orderType;
+            this.timeInForce = timeInForce;
+            this.limitPrice = limitPrice;
+            this.stopPrice = stopPrice;
+            this.visibleQuantity = visibleQuantity;
+            
+            accept (VALIDATING_VISITOR);
+        }
+
+        @StructureField (name = ORDER_ID)
+        public void setOrderID (long orderID)
+        {
+            if (orderID <= 0)
+                throw new IllegalArgumentException ("Order ID <= 0");
+            
+            this.orderID = orderID;
+        }
+
+        @StructureField (name = ORDER_STATE)
+        public void setOrderState (String orderState)
+        {
+            if (orderState == null)
+                throw new IllegalArgumentException ("Order state is null");
+            
+            try
+            {
+                this.orderState = PartyOrderState.valueOf (orderState);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException ("Unknown order state: " + side);
+            }
+        }
+        
+        @StructureField (name = ACCOUNT, optional = true)
+        public void setAccount (long account)
+        {
+            if (account <= 0)
+                throw new IllegalArgumentException ("Account <= 0");
+            
+            this.account = account;
+        }
+
+        @StructureField (name = SYMBOL)
+        public void setSymbol (String symbol)
+        {
+            if (symbol == null)
+                throw new IllegalArgumentException ("Symbol is null");
+            
+            this.symbol = symbol;
+        }
+
+        @StructureField (name = SIDE)
+        public void setSide (String side)
+        {
+            if (side == null)
+                throw new IllegalArgumentException ("Side is null");
+            
+            try
+            {
+                this.side = OrderSide.valueOf (side);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException ("Unknown side: " + side);
+            }
+        }
+
+        @StructureField (name = QUANTITY)
+        public void setQuantity (long quantity)
+        {
+            if (quantity <= 0)
+                throw new IllegalArgumentException ("Quantity <= 0");
+            
+            this.quantity = quantity;
+        }
+
+        @StructureField (name = FILLED_QUANTITY)
+        public void setFilledQuantity (long filledQuantity)
+        {
+            if (filledQuantity <= 0)
+                throw new IllegalArgumentException ("Filled quantity <= 0");
+            
+            this.filledQuantity = filledQuantity;
+        }
+
+        @StructureField (name = FILLED_VALUE)
+        public void setFilledValue (long filledValue)
+        {
+            if (filledValue <= 0)
+                throw new IllegalArgumentException ("Fille value <= 0");
+            
+            this.filledValue = filledValue;
+        }
+
+        @StructureField (name = ORDER_TYPE)
+        public void setOrderType (String orderType)
+        {
+            if (orderType == null)
+                throw new IllegalArgumentException ("Order type is null");
+            
+            try
+            {
+                this.orderType = OrderType.valueOf (orderType);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException ("Unknown order type: " + orderType);
+            }
+        }
+
+        @StructureField (name = TIME_IN_FORCE, optional = true)
+        public void setOrderID (String timeInForce)
+        {
+            if (timeInForce == null)
+                throw new IllegalArgumentException ("Time in force is null");
+            
+            try
+            {
+                this.timeInForce = OrderTimeInForce.valueOf (timeInForce);
+            }
+            catch (IllegalArgumentException ex)
+            {
+                throw new IllegalArgumentException ("Unknown time in force: " + timeInForce);
+            }
+        }
+
+        @StructureField (name = lIMIT_PRICE, optional = true)
+        public void setLimitPrice (long limitPrice)
+        {
+            if (limitPrice <= 0)
+                throw new IllegalArgumentException ("Limit price <= 0");
+            
+            this.limitPrice = limitPrice;
+        }
+
+        @StructureField (name = STOP_PRICE, optional = true)
+        public void setStopPrice (long stopPrice)
+        {
+            if (stopPrice <= 0)
+                throw new IllegalArgumentException ("Stop price <= 0");
+            
+            this.stopPrice = stopPrice;
+        }
+
+        @StructureField (name = VISIBLE_QUANTITY, optional = true)
+        public void setVisibleQuantity (long visibleQuantity)
+        {
+            if (visibleQuantity <= 0)
+                throw new IllegalArgumentException ("Visible quantity <= 0");
+            
+            this.visibleQuantity = visibleQuantity;
+        }
+        
+        @Override
+        public long getOrderID ()
+        {
+            return orderID;
+        }
+
+        @Override
+        public PartyOrderState getOrderState ()
+        {
+            return orderState;
+        }
+        
+        @Override
+        public long getAccount ()
+        {
+            return account;
+        }
+
+        @Override
+        public String getSymbol ()
+        {
+            return symbol;
+        }
+
+        @Override
+        public OrderSide getSide ()
+        {
+            return side;
+        }
+
+        @Override
+        public long getQuantity ()
+        {
+            return quantity;
+        }
+
+        @Override
+        public long getFilledQuantity ()
+        {
+            return filledQuantity;
+        }
+        
+        @Override
+        public long getFilledValue ()
+        {
+            return filledValue;
+        }
+        
+        @Override
+        public OrderType getOrderType ()
+        {
+            return orderType;
+        }
+
+        @Override
+        public OrderTimeInForce getTimeInForce ()
+        {
+            return timeInForce;
+        }
+
+        @Override
+        public long getLimitPrice ()
+        {
+            return limitPrice;
+        }
+
+        @Override
+        public long getStopPrice ()
+        {
+            return stopPrice;
+        }
+
+        @Override
+        public long getVisibleQuantity ()
+        {
+            return visibleQuantity;
         }
     }
 }

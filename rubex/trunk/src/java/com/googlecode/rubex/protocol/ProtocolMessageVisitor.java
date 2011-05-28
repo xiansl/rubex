@@ -40,4 +40,12 @@ public interface ProtocolMessageVisitor <T>
      * @return visit result
      */
     public T visitCancelOrder (CancelOrderProtocolMessage cancelOrder);
+    
+    /**
+     * Visit order status message.
+     * 
+     * @param orderStatus order status message to be visited
+     * @return visit result
+     */
+    public T visitOrderStatus (OrderStatusProtocolMessage orderStatus);
 }

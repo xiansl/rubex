@@ -8,8 +8,12 @@ import com.googlecode.rubex.net.event.ConnectionEvent;
 import com.googlecode.rubex.net.event.MessageEvent;
 import com.googlecode.rubex.net.event.MessageListener;
 import com.googlecode.rubex.party.Party;
+import com.googlecode.rubex.party.PartyOrder;
+import com.googlecode.rubex.party.event.PartyEvent;
+import com.googlecode.rubex.party.event.PartyListener;
 import com.googlecode.rubex.protocol.CancelOrderProtocolMessage;
 import com.googlecode.rubex.protocol.NewOrderProtocolMessage;
+import com.googlecode.rubex.protocol.OrderStatusProtocolMessage;
 import com.googlecode.rubex.protocol.ProtocolMessage;
 import com.googlecode.rubex.protocol.ProtocolMessageVisitor;
 import com.googlecode.rubex.protocol.ProtocolUtils;
@@ -20,6 +24,9 @@ public class RubexServerSession
 {
     private final static Logger logger =
         Logger.getLogger (RubexServerSession.class.getName ());
+
+    private final MyPartyListener partyListener =
+        new MyPartyListener ();
     
     private final Party party;
     private final Connection <ProtocolMessage> connection;
@@ -36,6 +43,7 @@ public class RubexServerSession
         this.party = party;
         this.connection = connection;
         
+        party.addPartyListener (partyListener);
         connection.addMessageListener (new MyMessageListener ());
     }
     
@@ -129,7 +137,55 @@ public class RubexServerSession
                     
                     return null;
                 }
+                
+                @Override
+                public Object visitOrderStatus (
+                    OrderStatusProtocolMessage orderStatus)
+                {
+                    if (logger.isLoggable (Level.WARNING))
+                        logger.warning ("Order status message received from client");
+                    
+                    connection.sendMessage (
+                        ProtocolUtils.createReject (
+                            "Unexpected order status message received", 
+                            ProtocolUtils.marshal (orderStatus)));
+                    
+                    return null;
+                }
             });
+    }
+    
+    private synchronized void sendOrderStatus (PartyOrder order)
+    {
+        connection.sendMessage (
+            ProtocolUtils.createOrderStatus (
+                order.getOrderID (), order.getOrderState (), 
+                order.getAccount (), order.getSymbol (), order.getSide (), 
+                order.getQuantity (), order.getFilledQuantity (), 
+                order.getFilledValue (), order.getOrderType (), 
+                order.getTimeInForce (), order.getLimitPrice (), 
+                order.getStopPrice (), order.getVisibleQuantity ()));
+    }
+    
+    private class MyPartyListener implements PartyListener
+    {
+        @Override
+        public void onOrder (PartyEvent event)
+        {
+            sendOrderStatus (event.getNewOrder ());
+        }
+        
+        @Override
+        public void onOrderCreated (PartyEvent event)
+        {
+            sendOrderStatus (event.getNewOrder ());
+        }
+
+        @Override
+        public void onOrderChanged (PartyEvent event)
+        {
+            sendOrderStatus (event.getNewOrder ());
+        }
     }
     
     private class MyMessageListener implements MessageListener <ProtocolMessage>
@@ -148,7 +204,7 @@ public class RubexServerSession
         public void onDisconnect (
             ConnectionEvent <? extends ProtocolMessage> event)
         {
-            // Do nothing
+            party.removePartyListener (partyListener);
         }
     }
 }

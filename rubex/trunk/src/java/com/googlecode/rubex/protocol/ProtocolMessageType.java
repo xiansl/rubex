@@ -20,5 +20,10 @@ public enum ProtocolMessageType
     /**
      * Cancel order request.
      */
-    CANCEL_ORDER
+    CANCEL_ORDER,
+    
+    /**
+     * Order status message.
+     */
+    ORDER_STATUS
 }
