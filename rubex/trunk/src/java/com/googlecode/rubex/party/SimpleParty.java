@@ -3,21 +3,52 @@ package com.googlecode.rubex.party;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.googlecode.rubex.exchange.Exchange;
 import com.googlecode.rubex.exchange.Order;
+import com.googlecode.rubex.exchange.OrderCallback;
+import com.googlecode.rubex.exchange.OrderException;
 import com.googlecode.rubex.exchange.OrderSide;
 import com.googlecode.rubex.exchange.OrderTimeInForce;
 import com.googlecode.rubex.exchange.OrderType;
 import com.googlecode.rubex.protocol.CancelOrderProtocolMessage;
 import com.googlecode.rubex.protocol.NewOrderProtocolMessage;
 import com.googlecode.rubex.protocol.ReplaceOrderProtocolMessage;
+import com.googlecode.rubex.symbol.SymbolManager;
 
+/**
+ * Simple implementation of {@link Party} interface based on 
+ * {@link SymbolManager}.
+ * 
+ * @author Mikhail Vladimirov
+ */
 public class SimpleParty implements Party
 {
+    private final OrderCallback orderCallback = 
+        new MyOrderCallback ();
     private final Map <Long, MyPartyOrder> orders =
         new HashMap <Long, MyPartyOrder> ();
     
+    private final SymbolManager symbolManager;
+    
+    /**
+     * Create new party based on given {@link SymbolManager} object.
+     * 
+     * @param symbolManager symbol manager to base on
+     */
+    public SimpleParty (SymbolManager symbolManager)
+    {
+        if (symbolManager == null)
+            throw new IllegalArgumentException ("Symbol manager is null");
+        
+        this.symbolManager = symbolManager;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public synchronized void processNewOrderMessage (NewOrderProtocolMessage newOrder)
+    public synchronized void processNewOrderMessage (
+        NewOrderProtocolMessage newOrder)
     {
         if (newOrder == null)
             throw new IllegalArgumentException ("New order is null");
@@ -46,8 +77,14 @@ public class SimpleParty implements Party
         );
         
         orders.put (orderID, partyOrder);
+        
+        symbolManager.executeInSymbolThread (
+            partyOrder.getSymbol (), new NewOrderRunnable (partyOrder));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public synchronized void processReplaceOrderMessage (
         ReplaceOrderProtocolMessage replaceOrder)
@@ -55,7 +92,8 @@ public class SimpleParty implements Party
         if (replaceOrder == null)
             throw new IllegalArgumentException ("Replace order is null");
         
-        Long originalOrderID = Long.valueOf (replaceOrder.getOriginalOrderID ());
+        Long originalOrderID = Long.valueOf (
+            replaceOrder.getOriginalOrderID ());
         if (!orders.containsKey (originalOrderID))
             throw new IllegalArgumentException (
                 "No order with such ID: " + originalOrderID);
@@ -85,8 +123,15 @@ public class SimpleParty implements Party
         );
         
         orders.put (orderID, partyOrder);
+        
+        symbolManager.executeInSymbolThread (
+            originalOrder.getSymbol (), 
+            new ReplaceOrderRunnable (originalOrder, partyOrder));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public synchronized void processCancelOrderMessage (
         CancelOrderProtocolMessage cancelOrder)
@@ -98,10 +143,102 @@ public class SimpleParty implements Party
         if (!orders.containsKey (orderID))
             throw new IllegalArgumentException (
                 "No order with such ID: " + orderID);
+
+        PartyOrder partyOrder = orders.get (orderID);
         
+        symbolManager.executeInSymbolThread (
+            partyOrder.getSymbol (), new CancelOrderRunnable (partyOrder));
+    }
+
+    private void placeOrder (PartyOrder order)
+    {
+        if (order == null)
+            throw new IllegalArgumentException ("Order is null");
+        
+        Exchange exchange = 
+            symbolManager.getSymbolExchange (order.getSymbol ());
+        
+        Long orderID = Long.valueOf (order.getOrderID ());
+        
+        Order o;
+        try
+        {
+            long now = System.currentTimeMillis ();
+            OrderType type = order.getOrderType ();
+            switch (type)
+            {
+            case MARKET:
+                o = exchange.createMarketOrder (
+                    now, order.getSide (), order.getQuantity (), 
+                    orderCallback, order);
+                break;
+            case LIMIT:
+                o = exchange.createLimitOrder (
+                    now, order.getSide (), order.getQuantity (), 
+                    order.getLimitPrice (), order.getTimeInForce (), 
+                    orderCallback, order);
+                break;
+            case STOP:
+                 o = exchange.createStopOrder (
+                    now, order.getSide (), order.getQuantity (), 
+                    order.getStopPrice (), orderCallback, order);
+                break;
+            case STOP_LIMIT:
+                o = exchange.createStopLimitOrder (
+                    now, order.getSide (), order.getQuantity (), 
+                    order.getStopPrice (), order.getLimitPrice (),
+                    orderCallback, order);
+                break;
+            case ICEBERG:
+                o = exchange.createIcebergOrder (
+                    now, order.getSide (), order.getQuantity (), 
+                    order.getLimitPrice (), order.getVisibleQuantity (),
+                    orderCallback, order);
+                break;
+            default:
+                throw new Error ("Unknown order type: " + type);
+            }
+        }
+        catch (OrderException ex)
+        {
+            orders.put (orderID, 
+                new MyPartyOrder (
+                    order.getOrderID (), PartyOrderState.REJECTED, order.getAccount (), 
+                    order.getSymbol (), order.getSide (), order.getQuantity (), 
+                    0, 0, order.getOrderType (), order.getTimeInForce (), 
+                    order.getLimitPrice (), order.getStopPrice (), 
+                    order.getVisibleQuantity (), null));
+            
+            return;
+        }
+        
+        if (orders.get (orderID) == order)
+            orders.put (orderID, 
+                new MyPartyOrder (
+                    order.getOrderID (), PartyOrderState.NEW, order.getAccount (), 
+                    order.getSymbol (), order.getSide (), order.getQuantity (), 
+                    0, 0, order.getOrderType (), order.getTimeInForce (), 
+                    order.getLimitPrice (), order.getStopPrice (), 
+                    order.getVisibleQuantity (), o));
+    }
+
+    private void replaceOrder (PartyOrder originalOrder, PartyOrder order)
+    {
+        if (originalOrder == null)
+            throw new IllegalArgumentException ("Original order is null");
+        
+        if (order == null)
+            throw new IllegalArgumentException ("Order is null");
         
     }
 
+    private void cancelOrder (PartyOrder order)
+    {
+        if (order == null)
+            throw new IllegalArgumentException ("Order is null");
+        
+    }
+    
     private class MyPartyOrder implements PartyOrder
     {
         private final long orderID;
@@ -258,6 +395,92 @@ public class SimpleParty implements Party
         public Order getOrder ()
         {
             return order;
+        }
+    }
+    
+    private class NewOrderRunnable implements Runnable
+    {
+        private final PartyOrder order;
+        
+        public NewOrderRunnable (PartyOrder order)
+        {
+            if (order == null)
+                throw new IllegalArgumentException ("Order is null");
+            
+            this.order = order;
+        }
+        
+        @Override
+        public void run ()
+        {
+            placeOrder (order);
+        }
+    }
+    
+    private class ReplaceOrderRunnable implements Runnable
+    {
+        private final PartyOrder originalOrder;
+        private final PartyOrder order;
+        
+        public ReplaceOrderRunnable (PartyOrder originalOrder, PartyOrder order)
+        {
+            if (originalOrder == null)
+                throw new IllegalArgumentException ("Original order is null");
+            
+            if (order == null)
+                throw new IllegalArgumentException ("Order is null");
+            
+            this.originalOrder = originalOrder;
+            this.order = order;
+        }
+        
+        @Override
+        public void run ()
+        {
+            replaceOrder (originalOrder, order);
+        }
+    }
+    
+    private class CancelOrderRunnable implements Runnable
+    {
+        private final PartyOrder order;
+        
+        public CancelOrderRunnable (PartyOrder order)
+        {
+            if (order == null)
+                throw new IllegalArgumentException ("Order is null");
+            
+            this.order = order;
+        }
+        
+        @Override
+        public void run ()
+        {
+            cancelOrder (order);
+        }
+    }
+    
+    private class MyOrderCallback implements OrderCallback
+    {
+        @Override
+        public void onFill (long timestamp, Order order, long quantity,
+            long price)
+        {
+        }
+
+        @Override
+        public void onFilled (long timestamp, Order order)
+        {
+        }
+
+        @Override
+        public void onCanceled (long timestamp, Order order)
+        {
+        }
+
+        @Override
+        public void onReplaced (long timestamp, Order order, Order newOrder)
+        {
         }
     }
 }
