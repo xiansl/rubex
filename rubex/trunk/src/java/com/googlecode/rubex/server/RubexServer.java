@@ -6,6 +6,7 @@ import com.googlecode.rubex.net.Connection;
 import com.googlecode.rubex.net.ProtocolServerSocketServer;
 import com.googlecode.rubex.net.event.ConnectionEvent;
 import com.googlecode.rubex.net.event.ConnectionListener;
+import com.googlecode.rubex.party.Party;
 import com.googlecode.rubex.party.SimpleParty;
 import com.googlecode.rubex.protocol.ProtocolMessage;
 import com.googlecode.rubex.symbol.SimpleSymbolManager;
@@ -14,6 +15,8 @@ public class RubexServer
 {
     private final SimpleSymbolManager symbolManager =
         new SimpleSymbolManager ();
+    
+    private final Party party = new SimpleParty (symbolManager);
     
     public RubexServer (String [] args) throws Exception
     {
@@ -38,7 +41,7 @@ public class RubexServer
         {
             Connection <ProtocolMessage> connection = event.getConnection ();
             
-            new RubexServerSession (new SimpleParty (symbolManager), connection);
+            new RubexServerSession (party, connection);
         }
     }
     
