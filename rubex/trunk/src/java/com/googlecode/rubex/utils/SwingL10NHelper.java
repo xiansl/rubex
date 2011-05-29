@@ -8,6 +8,7 @@ import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.swing.AbstractButton;
 import javax.swing.JLabel;
@@ -105,6 +106,35 @@ public class SwingL10NHelper
     private static interface L10NEntry
     {
         public void update ();
+    }
+    
+    private static abstract class AbstractL10NEntry
+    {
+        private final static Pattern
+        
+        private final Object entity;
+        private final String key;
+        private final Object [] parameters;
+        
+        public AbstractL10NEntry (Object entity, String key, Object [] parameters)
+        {
+            if (entity == null)
+                throw new IllegalArgumentException ("Entity is null");
+            
+            if (key == null)
+                throw new IllegalArgumentException ("Key is null");
+            
+            if (parameters == null)
+                throw new IllegalArgumentException ("Parameters is null");
+            
+            this.entity = entity;
+            this.key = key;
+            this.parameters = parameters.clone ();
+        }
+        
+        protected String getStringValue ()
+        {
+        }
     }
     
     private static class L10NJLabelText 

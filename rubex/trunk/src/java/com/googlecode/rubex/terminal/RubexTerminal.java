@@ -3,6 +3,7 @@ package com.googlecode.rubex.terminal;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import javax.swing.JFrame;
 import javax.swing.UIManager;
 
 import com.googlecode.rubex.utils.SwingL10NHelper;
@@ -28,6 +29,10 @@ public class RubexTerminal
         
         UIManager.setLookAndFeel (UIManager.getSystemLookAndFeelClassName ());
 
-        new ConnectDialog ();
+        MainFrame frame = new MainFrame ();
+        
+        frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
+        
+        frame.setVisible (true);
     }
 }

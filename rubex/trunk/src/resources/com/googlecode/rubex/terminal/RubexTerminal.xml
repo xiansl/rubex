@@ -11,4 +11,5 @@
   <entry key="connect-dialog.public-key-label.text">Public key:</entry>
   <entry key="connect-dialog.cancel-button.text">Cancel</entry>
   <entry key="connect-dialog.connect-button.text">Connect</entry>
+  <entry key="main-frame.status-message-label.text.disconnected">Disconnected</entry>
 </properties>
