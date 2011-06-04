@@ -31,7 +31,7 @@ public class RubexTerminal
 
         MainFrame frame = new MainFrame ();
         
-        frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation (JFrame.DISPOSE_ON_CLOSE);
         
         frame.setVisible (true);
     }
