@@ -110,8 +110,6 @@ public class SwingL10NHelper
     
     private static abstract class AbstractL10NEntry
     {
-        private final static Pattern
-        
         private final Object entity;
         private final String key;
         private final Object [] parameters;
@@ -134,6 +132,7 @@ public class SwingL10NHelper
         
         protected String getStringValue ()
         {
+            return null;
         }
     }
     
