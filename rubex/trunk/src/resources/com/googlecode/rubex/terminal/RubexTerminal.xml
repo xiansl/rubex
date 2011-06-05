@@ -11,9 +11,9 @@
   <entry key="connect-dialog.public-key-label.text">Public key:</entry>
   <entry key="connect-dialog.cancel-button.text">Cancel</entry>
   <entry key="connect-dialog.connect-button.text">Connect</entry>
-  <entry key="main-frame.menu.language.label">Language</entry>
-  <entry key="main-frame.menu.language.english.label">English</entry>
-  <entry key="main-frame.menu.language.russian.label">Russian</entry>
+  <entry key="main-frame.menu.language.text">Language</entry>
+  <entry key="main-frame.menu.language.english.text">English</entry>
+  <entry key="main-frame.menu.language.russian.text">Russian</entry>
   <entry key="main-frame.status-message-label.text.disconnected">Disconnected</entry>
   <entry key="memory-status-indicator.string">$1M of $2M</entry>
   <entry key="main-frame.gc-button.text">!</entry>
