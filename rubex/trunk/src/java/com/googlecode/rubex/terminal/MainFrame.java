@@ -63,12 +63,12 @@ public class MainFrame extends JFrame
         SwingL10NHelper.localizeJLabelText (
             statusMessageLabel, "main-frame.status-message-label.text.disconnected");
         
-        MemoryStatusIndicator memoryStatusIndicator = 
-            new MemoryStatusIndicator ();
-        int w = memoryStatusIndicator.getPreferredSize ().height;
+        HeapStatusIndicator heapStatusIndicator = 
+            new HeapStatusIndicator ();
+        int w = heapStatusIndicator.getPreferredSize ().height;
         Dimension s = new Dimension (100, w);
-        memoryStatusIndicator.setPreferredSize (s);
-        memoryStatusIndicator.setMaximumSize (s);
+        heapStatusIndicator.setPreferredSize (s);
+        heapStatusIndicator.setMaximumSize (s);
         
         JButton gcButton = new JButton ();
         SwingL10NHelper.localizeAbstractButtonText (gcButton, "main-frame.gc-button.text");
@@ -87,7 +87,7 @@ public class MainFrame extends JFrame
         statusLine.add (Box.createHorizontalStrut (8));
         statusLine.add (statusMessageLabel);
         statusLine.add (Box.createHorizontalGlue ());
-        statusLine.add (memoryStatusIndicator);
+        statusLine.add (heapStatusIndicator);
         statusLine.add (gcButton);
         
         Container contentPane = getContentPane ();

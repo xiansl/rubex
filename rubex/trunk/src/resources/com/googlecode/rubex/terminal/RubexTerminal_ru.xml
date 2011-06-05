@@ -18,7 +18,8 @@
   <entry key="main-frame.status-message-label.text.disconnected">Нет соединения</entry>
   <entry key="main-frame.gc-button.text">!</entry>
   <entry key="main-frame.gc-button.toolTipText">Выполнить сборку мусора</entry>
-  <entry key="memory-status-indicator.string">$1M из $2M</entry>
+  <entry key="memory-status-indicator.string">$1 MB из $2 MB</entry>
+  <entry key="memory-status-indicator.toolTipText">Свободно: $1 MB, всего: $2 MB, максимум: $3 MB</entry>
   <entry key="connect-action.name">Установить соединение...</entry>
   <entry key="disconnect-action.name">Разорвать соединение</entry>
 </properties>

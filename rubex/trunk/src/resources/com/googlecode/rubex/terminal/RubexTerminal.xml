@@ -18,7 +18,8 @@
   <entry key="main-frame.status-message-label.text.disconnected">Disconnected</entry>
   <entry key="main-frame.gc-button.text">!</entry>
   <entry key="main-frame.gc-button.toolTipText">Perform garbage collection</entry>
-  <entry key="memory-status-indicator.string">$1M of $2M</entry>
+  <entry key="memory-status-indicator.string">$1 MB of $2 MB</entry>
+  <entry key="memory-status-indicator.toolTipText">Free: $1 MB, total: $2 MB, maximum: $3 MB</entry>
   <entry key="connect-action.name">Connect...</entry>
   <entry key="disconnect-action.name">Disconnect</entry>
 </properties>

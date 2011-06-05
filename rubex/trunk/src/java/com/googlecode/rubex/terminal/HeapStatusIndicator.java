@@ -10,11 +10,19 @@ import javax.swing.Timer;
 
 import com.googlecode.rubex.utils.SwingL10NHelper;
 
-public class MemoryStatusIndicator extends JProgressBar
+/**
+ * GUI component that displays status of JVM heap.
+ * 
+ * @author Mikhail Vladimirov
+ */ 
+public class HeapStatusIndicator extends JProgressBar
 {
     private final Timer timer;
     
-    public MemoryStatusIndicator ()
+    /**
+     * Create new heap status indicator.
+     */
+    public HeapStatusIndicator ()
     {
         timer = new Timer (1000, new ActionListener()
         {
@@ -50,6 +58,7 @@ public class MemoryStatusIndicator extends JProgressBar
         
         long freeMemory = runtime.freeMemory ();
         long totalMemory = runtime.totalMemory ();
+        long maxMemory = runtime.maxMemory ();
         long usedMemory = totalMemory - freeMemory;
         
         long totalMemoryScaled = totalMemory;
@@ -66,5 +75,12 @@ public class MemoryStatusIndicator extends JProgressBar
         
         SwingL10NHelper.localizeJProgressBarString (
             this, "memory-status-indicator.string", Long.valueOf (usedMemory / (1024 * 1024)), Long.valueOf (totalMemory / (1024 * 1024)));
+        
+        SwingL10NHelper.localizeJComponentToolTipText (
+            this, 
+            "memory-status-indicator.toolTipText", 
+            Long.valueOf (freeMemory / (1024 * 1024)),
+            Long.valueOf (totalMemory / (1024 * 1024)),
+            Long.valueOf (maxMemory / (1024 * 1024)));
     }
 }
