@@ -11,9 +11,9 @@
   <entry key="connect-dialog.public-key-label.text">Публичный ключ:</entry>
   <entry key="connect-dialog.cancel-button.text">Отмена</entry>
   <entry key="connect-dialog.connect-button.text">Соединиться</entry>
-  <entry key="main-frame.menu.language.label">Язык (Language)</entry>
-  <entry key="main-frame.menu.language.english.label">Английский (English)</entry>
-  <entry key="main-frame.menu.language.russian.label">Русский (Russian)</entry>
+  <entry key="main-frame.menu.language.text">Язык (Language)</entry>
+  <entry key="main-frame.menu.language.english.text">Английский (English)</entry>
+  <entry key="main-frame.menu.language.russian.text">Русский (Russian)</entry>
   <entry key="main-frame.status-message-label.text.disconnected">Нет соединения</entry>
   <entry key="memory-status-indicator.string">$1M из $2M</entry>
   <entry key="main-frame.gc-button.text">!</entry>

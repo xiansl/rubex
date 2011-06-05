@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import javax.swing.AbstractButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JProgressBar;
 
 public class SwingL10NHelper
@@ -71,6 +72,23 @@ public class SwingL10NHelper
         addEntry (
             menuItem, "label", 
             new L10NMenuItemLabel (menuItem, key, parameters));
+    }
+    
+    public static synchronized void localizeJMenuItemText (
+        JMenuItem menuItem, String key, Object ... parameters)
+    {
+        if (menuItem == null)
+            throw new IllegalArgumentException ("Menu item is null");
+        
+        if (key == null)
+            throw new IllegalArgumentException ("Key is null");
+        
+        if (parameters == null)
+            throw new IllegalArgumentException ("Parameters is null");
+        
+        addEntry (
+            menuItem, "label", 
+            new L10NJMenuItemText (menuItem, key, parameters));
     }
     
     public static synchronized void localizeDialogTitle (
@@ -264,6 +282,33 @@ public class SwingL10NHelper
             
             if (m != null)
                 m.setLabel (getStringValue ());
+        }
+    }
+    
+    private static class L10NJMenuItemText 
+        extends AbstractL10NEntry
+    {
+        private final WeakReference <JMenuItem> menuItem;
+        
+        public L10NJMenuItemText (JMenuItem menuItem, String key, Object ... parameters)
+        {
+            super (key, parameters);
+            
+            if (menuItem == null)
+                throw new IllegalArgumentException ("Menu item is null");
+            
+            this.menuItem = new WeakReference <JMenuItem> (menuItem);
+            
+            update ();
+        }
+        
+        @Override
+        public void update ()
+        {
+            JMenuItem m = menuItem.get ();
+            
+            if (m != null)
+                m.setText (getStringValue ());
         }
     }
     

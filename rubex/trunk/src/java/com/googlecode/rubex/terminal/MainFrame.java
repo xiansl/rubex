@@ -4,9 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Image;
-import java.awt.Menu;
-import java.awt.MenuBar;
-import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -16,6 +13,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
@@ -95,8 +95,8 @@ public class MainFrame extends JFrame
         
         setIconImages (Arrays.asList (RUBEX_ICON_16x16, RUBEX_ICON_24x24, RUBEX_ICON_32x32, RUBEX_ICON_48x48, RUBEX_ICON_64x64, RUBEX_ICON_256x256));
         
-        MenuItem englishMenuItem = new MenuItem ();
-        SwingL10NHelper.localizeMenuItemLabel (englishMenuItem, "main-frame.menu.language.english.label");
+        JMenuItem englishMenuItem = new JMenuItem ();
+        SwingL10NHelper.localizeJMenuItemText (englishMenuItem, "main-frame.menu.language.english.text");
         englishMenuItem.addActionListener (new ActionListener()
         {
             @Override
@@ -106,8 +106,8 @@ public class MainFrame extends JFrame
             }
         });
         
-        MenuItem russianMenuItem = new MenuItem ();
-        SwingL10NHelper.localizeMenuItemLabel (russianMenuItem, "main-frame.menu.language.russian.label");
+        JMenuItem russianMenuItem = new JMenuItem ();
+        SwingL10NHelper.localizeJMenuItemText (russianMenuItem, "main-frame.menu.language.russian.text");
         russianMenuItem.addActionListener (new ActionListener()
         {
             @Override
@@ -117,14 +117,14 @@ public class MainFrame extends JFrame
             }
         });
         
-        Menu languageMenu = new Menu ();
-        SwingL10NHelper.localizeMenuItemLabel (languageMenu, "main-frame.menu.language.label");
+        JMenu languageMenu = new JMenu ();
+        SwingL10NHelper.localizeJMenuItemText (languageMenu, "main-frame.menu.language.text");
         languageMenu.add (englishMenuItem);
         languageMenu.add (russianMenuItem);
         
-        MenuBar menuBar = new MenuBar ();
+        JMenuBar menuBar = new JMenuBar ();
         menuBar.add (languageMenu);
-        setMenuBar (menuBar);
+        setJMenuBar (menuBar);
         
         pack ();
     }
