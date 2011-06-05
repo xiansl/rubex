@@ -19,6 +19,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
+import com.googlecode.rubex.terminal.action.ConnectAction;
+import com.googlecode.rubex.terminal.action.DisconnectAction;
 import com.googlecode.rubex.utils.SwingL10NHelper;
 
 public class MainFrame extends JFrame
@@ -117,12 +119,18 @@ public class MainFrame extends JFrame
             }
         });
         
+        JMenu connectionMenu = new JMenu ();
+        SwingL10NHelper.localizeJMenuItemText (connectionMenu, "main-frame.menu.connection.text");
+        connectionMenu.add (new ConnectAction ());
+        connectionMenu.add (new DisconnectAction ());
+        
         JMenu languageMenu = new JMenu ();
         SwingL10NHelper.localizeJMenuItemText (languageMenu, "main-frame.menu.language.text");
         languageMenu.add (englishMenuItem);
         languageMenu.add (russianMenuItem);
         
         JMenuBar menuBar = new JMenuBar ();
+        menuBar.add (connectionMenu);
         menuBar.add (languageMenu);
         setJMenuBar (menuBar);
         

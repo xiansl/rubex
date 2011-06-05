@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.AbstractButton;
+import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -156,6 +157,23 @@ public class SwingL10NHelper
         addEntry (
             component, "toolTipText", 
             new L10NJComponentToolTipText (component, key, parameters));
+    }
+    
+    public static synchronized void localizeActionName (
+        Action action, String key, Object ... parameters)
+    {
+        if (action == null)
+            throw new IllegalArgumentException ("Action is null");
+        
+        if (key == null)
+            throw new IllegalArgumentException ("Key is null");
+        
+        if (parameters == null)
+            throw new IllegalArgumentException ("Parameters is null");
+        
+        addEntry (
+            action, "name", 
+            new L10NActionName (action, key, parameters));
     }
     
     private static void addEntry (Object entity, String property, L10NEntry entry)
@@ -417,6 +435,33 @@ public class SwingL10NHelper
             
             if (c != null)
                 c.setToolTipText (getStringValue ());
+        }
+    }
+    
+    private static class L10NActionName
+        extends AbstractL10NEntry
+    {
+        private final WeakReference <Action> action;
+        
+        public L10NActionName (Action action, String key, Object ... parameters)
+        {
+            super (key, parameters);
+            
+            if (action == null)
+                throw new IllegalArgumentException ("Action is null");
+            
+            this.action = new WeakReference <Action> (action);
+            
+            update ();
+        }
+        
+        @Override
+        public void update ()
+        {
+            Action a = action.get ();
+            
+            if (a != null)
+                a.putValue (Action.NAME, getStringValue ());
         }
     }
 }
