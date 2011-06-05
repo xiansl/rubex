@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Image;
+import java.awt.Menu;
+import java.awt.MenuBar;
+import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -60,8 +63,14 @@ public class MainFrame extends JFrame
         
         MemoryStatusIndicator memoryStatusIndicator = 
             new MemoryStatusIndicator ();
+        int w = memoryStatusIndicator.getPreferredSize ().height;
+        Dimension s = new Dimension (100, w);
+        memoryStatusIndicator.setPreferredSize (s);
+        memoryStatusIndicator.setMaximumSize (s);
         
-        JButton gcButton = new JButton ("gc");
+        JButton gcButton = new JButton ();
+        SwingL10NHelper.localizeAbstractButtonText (gcButton, "main-frame.gc-button.text");
+        SwingL10NHelper.localizeJComponentToolTipText (gcButton, "main-frame.gc-button.toolTipText");
         gcButton.addActionListener (new ActionListener()
         {
             @Override
@@ -70,11 +79,12 @@ public class MainFrame extends JFrame
                 System.gc ();
             }
         });
-        gcButton.setPreferredSize (new Dimension (gcButton.getPreferredSize ().width, memoryStatusIndicator.getPreferredSize ().height));
+        gcButton.setPreferredSize (new Dimension (gcButton.getPreferredSize ().width, w));
         
         Box statusLine = Box.createHorizontalBox ();
-        statusLine.add (statusMessageLabel);
         statusLine.add (Box.createHorizontalStrut (8));
+        statusLine.add (statusMessageLabel);
+        statusLine.add (Box.createHorizontalGlue ());
         statusLine.add (memoryStatusIndicator);
         statusLine.add (gcButton);
         
@@ -84,6 +94,37 @@ public class MainFrame extends JFrame
         contentPane.add (statusLine, BorderLayout.SOUTH);
         
         setIconImages (Arrays.asList (RUBEX_ICON_16x16, RUBEX_ICON_24x24, RUBEX_ICON_32x32, RUBEX_ICON_48x48, RUBEX_ICON_64x64, RUBEX_ICON_256x256));
+        
+        MenuItem englishMenuItem = new MenuItem ();
+        SwingL10NHelper.localizeMenuItemLabel (englishMenuItem, "main-frame.menu.language.english.label");
+        englishMenuItem.addActionListener (new ActionListener()
+        {
+            @Override
+            public void actionPerformed (ActionEvent e)
+            {
+                SwingL10NHelper.setResourceBundle (RubexTerminal.EN);
+            }
+        });
+        
+        MenuItem russianMenuItem = new MenuItem ();
+        SwingL10NHelper.localizeMenuItemLabel (russianMenuItem, "main-frame.menu.language.russian.label");
+        russianMenuItem.addActionListener (new ActionListener()
+        {
+            @Override
+            public void actionPerformed (ActionEvent e)
+            {
+                SwingL10NHelper.setResourceBundle (RubexTerminal.RU);
+            }
+        });
+        
+        Menu languageMenu = new Menu ();
+        SwingL10NHelper.localizeMenuItemLabel (languageMenu, "main-frame.menu.language.label");
+        languageMenu.add (englishMenuItem);
+        languageMenu.add (russianMenuItem);
+        
+        MenuBar menuBar = new MenuBar ();
+        menuBar.add (languageMenu);
+        setMenuBar (menuBar);
         
         pack ();
     }

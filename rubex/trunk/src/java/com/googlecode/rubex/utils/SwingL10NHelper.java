@@ -2,24 +2,23 @@ package com.googlecode.rubex.utils;
 
 import java.awt.Dialog;
 import java.awt.MenuItem;
-import java.lang.ref.Reference;
-import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.AbstractButton;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JProgressBar;
 
 public class SwingL10NHelper
 {
-    private final static ReferenceQueue <Object> referenceQueue = 
-        new ReferenceQueue <Object> ();
-    
-    private final static Set <L10NEntry> entries = 
-        new HashSet <L10NEntry> ();
+    private final static Map <Object, Map <String, L10NEntry>> entries =
+        new WeakHashMap <Object, Map<String,L10NEntry>> ();
     
     private static ResourceBundle resourceBundle = null;
     
@@ -36,12 +35,13 @@ public class SwingL10NHelper
         
         SwingL10NHelper.resourceBundle = resourceBundle;
 
-        for (L10NEntry entry: entries)
-            entry.update ();
+        for (Map <String, L10NEntry> entity: entries.values ())
+            for (L10NEntry entry: entity.values ())
+                entry.update ();
     }
 
     public static synchronized void localizeJLabelText (
-        JLabel label, String key)
+        JLabel label, String key, Object ... parameters)
     {
         if (label == null)
             throw new IllegalArgumentException ("Label is null");
@@ -49,13 +49,15 @@ public class SwingL10NHelper
         if (key == null)
             throw new IllegalArgumentException ("Key is null");
         
-        drainQueue ();
+        if (parameters == null)
+            throw new IllegalArgumentException ("Parameters is null");
         
-        entries.add (new L10NJLabelText (label, key));
+        addEntry (
+            label, "text", new L10NJLabelText (label, key, parameters));
     }
     
     public static synchronized void localizeMenuItemLabel (
-        MenuItem menuItem, String key)
+        MenuItem menuItem, String key, Object ... parameters)
     {
         if (menuItem == null)
             throw new IllegalArgumentException ("Menu item is null");
@@ -63,13 +65,16 @@ public class SwingL10NHelper
         if (key == null)
             throw new IllegalArgumentException ("Key is null");
         
-        drainQueue ();
+        if (parameters == null)
+            throw new IllegalArgumentException ("Parameters is null");
         
-        entries.add (new L10NMenuItemLabel (menuItem, key));
+        addEntry (
+            menuItem, "label", 
+            new L10NMenuItemLabel (menuItem, key, parameters));
     }
     
     public static synchronized void localizeDialogTitle (
-        Dialog dialog, String key)
+        Dialog dialog, String key, Object ... parameters)
     {
         if (dialog == null)
             throw new IllegalArgumentException ("Dialog is null");
@@ -77,13 +82,15 @@ public class SwingL10NHelper
         if (key == null)
             throw new IllegalArgumentException ("Key is null");
         
-        drainQueue ();
+        if (parameters == null)
+            throw new IllegalArgumentException ("Parameters is null");
         
-        entries.add (new L10NDialogTitle (dialog, key));
+        addEntry (
+            dialog, "title", new L10NDialogTitle (dialog, key, parameters));
     }
     
     public static synchronized void localizeAbstractButtonText (
-        AbstractButton abstarctButton, String key)
+        AbstractButton abstarctButton, String key, Object ... parameters)
     {
         if (abstarctButton == null)
             throw new IllegalArgumentException ("Abstract button is null");
@@ -91,16 +98,67 @@ public class SwingL10NHelper
         if (key == null)
             throw new IllegalArgumentException ("Key is null");
         
-        drainQueue ();
+        if (parameters == null)
+            throw new IllegalArgumentException ("Parameters is null");
         
-        entries.add (new L10NAbstractButtonText (abstarctButton, key));
+        addEntry (
+            abstarctButton, "text", 
+            new L10NAbstractButtonText (abstarctButton, key, parameters));
     }
     
-    private static void drainQueue ()
+    public static synchronized void localizeJProgressBarString (
+        JProgressBar progressBar, String key, Object ... parameters)
     {
-        Reference <?> reference;
-        while ((reference = referenceQueue.poll ()) != null)
-            entries.remove (reference);
+        if (progressBar == null)
+            throw new IllegalArgumentException ("Progress bar is null");
+        
+        if (key == null)
+            throw new IllegalArgumentException ("Key is null");
+        
+        if (parameters == null)
+            throw new IllegalArgumentException ("Parameters is null");
+        
+        addEntry (
+            progressBar, "string", 
+            new L10NJProgressBarString (progressBar, key, parameters));
+    }
+    
+    public static synchronized void localizeJComponentToolTipText (
+        JComponent component, String key, Object ... parameters)
+    {
+        if (component == null)
+            throw new IllegalArgumentException ("Component is null");
+        
+        if (key == null)
+            throw new IllegalArgumentException ("Key is null");
+        
+        if (parameters == null)
+            throw new IllegalArgumentException ("Parameters is null");
+        
+        addEntry (
+            component, "toolTipText", 
+            new L10NJComponentToolTipText (component, key, parameters));
+    }
+    
+    private static void addEntry (Object entity, String property, L10NEntry entry)
+    {
+        if (entity == null)
+            throw new IllegalArgumentException ("Entity is null");
+        
+        if (property == null)
+            throw new IllegalArgumentException ("Property is null");
+        
+        if (entry == null)
+            throw new IllegalArgumentException ("Entry is null");
+        
+        Map <String, L10NEntry> m = entries.get (entity);
+        if (m == null)
+        {
+            m = new HashMap <String, SwingL10NHelper.L10NEntry> ();
+            entries.put (entity, m);
+        }
+        
+        m.put (property, entry);
     }
     
     private static interface L10NEntry
@@ -108,54 +166,68 @@ public class SwingL10NHelper
         public void update ();
     }
     
-    private static abstract class AbstractL10NEntry
+    private static abstract class AbstractL10NEntry implements L10NEntry
     {
-        private final Object entity;
+        private final static Pattern PLACEHOLDER = 
+            Pattern.compile ("(?:\\$[0-9])|(?:\\$\\$)|(?:\\$\\{[0-9]+\\})");
+        
         private final String key;
         private final Object [] parameters;
         
-        public AbstractL10NEntry (Object entity, String key, Object [] parameters)
+        public AbstractL10NEntry (String key, Object ... parameters)
         {
-            if (entity == null)
-                throw new IllegalArgumentException ("Entity is null");
-            
             if (key == null)
                 throw new IllegalArgumentException ("Key is null");
             
             if (parameters == null)
                 throw new IllegalArgumentException ("Parameters is null");
             
-            this.entity = entity;
             this.key = key;
             this.parameters = parameters.clone ();
         }
         
         protected String getStringValue ()
         {
-            return null;
+            StringBuffer result = new StringBuffer ();
+            
+            Matcher m = PLACEHOLDER.matcher (resourceBundle.getString (key));
+            while (m.find ())
+            {
+                String placeholder = m.group ();
+                
+                if ("$$".equals (placeholder))
+                    m.appendReplacement (result, "$");
+                else if (placeholder.startsWith ("${"))
+                    m.appendReplacement (
+                        result, 
+                        parameters [Integer.parseInt (
+                            placeholder.substring (2, placeholder.length () - 1)) - 1].toString ());
+                else
+                    m.appendReplacement (
+                        result, 
+                        parameters [Integer.parseInt (
+                            placeholder.substring (1)) - 1].toString ());
+            }
+            m.appendTail (result);
+            return result.toString ();
         }
     }
     
     private static class L10NJLabelText 
-        extends WeakReference <JLabel>
-        implements L10NEntry
+        extends AbstractL10NEntry
     {
         private final WeakReference <JLabel> label;
-        private final String key;
         
-        public L10NJLabelText (JLabel label, String key)
+        public L10NJLabelText (JLabel label, String key, Object ... parameters)
         {
-            super (label, referenceQueue);
+            super (key, parameters);
             
             if (label == null)
                 throw new IllegalArgumentException ("Label is null");
-            
-            if (key == null)
-                throw new IllegalArgumentException ("Key is null");
-            
+
             this.label = new WeakReference <JLabel> (label);
-            this.key = key;
-            label.setText (resourceBundle.getString (key));
+            
+            update ();
         }
         
         @Override
@@ -164,30 +236,25 @@ public class SwingL10NHelper
             JLabel l = label.get ();
             
             if (l != null)
-                l.setText (resourceBundle.getString (key));
+                l.setText (getStringValue ());
         }
     }
     
     private static class L10NMenuItemLabel 
-        extends WeakReference <MenuItem>
-        implements L10NEntry
+        extends AbstractL10NEntry
     {
         private final WeakReference <MenuItem> menuItem;
-        private final String key;
         
-        public L10NMenuItemLabel (MenuItem menuItem, String key)
+        public L10NMenuItemLabel (MenuItem menuItem, String key, Object ... parameters)
         {
-            super (menuItem, referenceQueue);
+            super (key, parameters);
             
             if (menuItem == null)
                 throw new IllegalArgumentException ("Menu item is null");
             
-            if (key == null)
-                throw new IllegalArgumentException ("Key is null");
-            
             this.menuItem = new WeakReference <MenuItem> (menuItem);
-            this.key = key;
-            menuItem.setLabel (resourceBundle.getString (key));
+            
+            update ();
         }
         
         @Override
@@ -196,30 +263,25 @@ public class SwingL10NHelper
             MenuItem m = menuItem.get ();
             
             if (m != null)
-                m.setLabel (resourceBundle.getString (key));
+                m.setLabel (getStringValue ());
         }
     }
     
     private static class L10NDialogTitle 
-        extends WeakReference <Dialog>
-        implements L10NEntry
+    extends AbstractL10NEntry
     {
         private final WeakReference <Dialog> dialog;
-        private final String key;
         
-        public L10NDialogTitle (Dialog dialog, String key)
+        public L10NDialogTitle (Dialog dialog, String key, Object ... parameters)
         {
-            super (dialog, referenceQueue);
+            super (key, parameters);
             
             if (dialog == null)
                 throw new IllegalArgumentException ("Dialog is null");
             
-            if (key == null)
-                throw new IllegalArgumentException ("Key is null");
-            
             this.dialog = new WeakReference <Dialog> (dialog);
-            this.key = key;
-            dialog.setTitle (resourceBundle.getString (key));
+            
+            update ();
         }
         
         @Override
@@ -228,30 +290,25 @@ public class SwingL10NHelper
             Dialog m = dialog.get ();
             
             if (m != null)
-                m.setTitle (resourceBundle.getString (key));
+                m.setTitle (getStringValue ());
         }
     }
     
     private static class L10NAbstractButtonText
-        extends WeakReference <AbstractButton>
-        implements L10NEntry
+        extends AbstractL10NEntry
     {
         private final WeakReference <AbstractButton> abstractButton;
-        private final String key;
         
-        public L10NAbstractButtonText (AbstractButton abstractButton, String key)
+        public L10NAbstractButtonText (AbstractButton abstractButton, String key, Object ... parameters)
         {
-            super (abstractButton, referenceQueue);
+            super (key, parameters);
             
             if (abstractButton == null)
-                throw new IllegalArgumentException ("Dialog is null");
-            
-            if (key == null)
-                throw new IllegalArgumentException ("Key is null");
+                throw new IllegalArgumentException ("Abstract button is null");
             
             this.abstractButton = new WeakReference <AbstractButton> (abstractButton);
-            this.key = key;
-            abstractButton.setText (resourceBundle.getString (key));
+            
+            update ();
         }
         
         @Override
@@ -260,7 +317,61 @@ public class SwingL10NHelper
             AbstractButton m = abstractButton.get ();
             
             if (m != null)
-                m.setText (resourceBundle.getString (key));
+                m.setText (getStringValue ());
+        }
+    }
+    
+    private static class L10NJProgressBarString
+        extends AbstractL10NEntry
+    {
+        private final WeakReference <JProgressBar> progressBar;
+        
+        public L10NJProgressBarString (JProgressBar progressBar, String key, Object ... parameters)
+        {
+            super (key, parameters);
+            
+            if (progressBar == null)
+                throw new IllegalArgumentException ("Progress bar is null");
+            
+            this.progressBar = new WeakReference <JProgressBar> (progressBar);
+            
+            update ();
+        }
+        
+        @Override
+        public void update ()
+        {
+            JProgressBar p = progressBar.get ();
+            
+            if (p != null)
+                p.setString (getStringValue ());
+        }
+    }
+    
+    private static class L10NJComponentToolTipText
+        extends AbstractL10NEntry
+    {
+        private final WeakReference <JComponent> component;
+        
+        public L10NJComponentToolTipText (JComponent component, String key, Object ... parameters)
+        {
+            super (key, parameters);
+            
+            if (component == null)
+                throw new IllegalArgumentException ("Component is null");
+            
+            this.component = new WeakReference <JComponent> (component);
+            
+            update ();
+        }
+        
+        @Override
+        public void update ()
+        {
+            JComponent c = component.get ();
+            
+            if (c != null)
+                c.setToolTipText (getStringValue ());
         }
     }
 }

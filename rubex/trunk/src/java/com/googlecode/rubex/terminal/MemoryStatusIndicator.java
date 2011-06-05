@@ -8,6 +8,8 @@ import java.beans.PropertyChangeListener;
 import javax.swing.JProgressBar;
 import javax.swing.Timer;
 
+import com.googlecode.rubex.utils.SwingL10NHelper;
+
 public class MemoryStatusIndicator extends JProgressBar
 {
     private final Timer timer;
@@ -61,6 +63,8 @@ public class MemoryStatusIndicator extends JProgressBar
         setMinimum (0);
         setMaximum ((int)totalMemoryScaled);
         setValue ((int)usedMemoryScaled);
-        setString (usedMemory / (1024 * 1024) + "M of " + totalMemory / (1024 * 1024) + "M");
+        
+        SwingL10NHelper.localizeJProgressBarString (
+            this, "memory-status-indicator.string", Long.valueOf (usedMemory / (1024 * 1024)), Long.valueOf (totalMemory / (1024 * 1024)));
     }
 }
